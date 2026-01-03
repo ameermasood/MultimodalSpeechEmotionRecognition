@@ -2,7 +2,7 @@
 
 ---
 
-# 🎧 Multimodal Emotion Recognition with Large Audio-Language Models
+# Multimodal Emotion Recognition with Large Audio-Language Models
 
 This repository contains the work developed for the **Applied Data Science Project**
 course. The project focuses on **multimodal emotion recognition from speech** using
@@ -14,7 +14,7 @@ adaptation.
 
 ---
 
-## 👥 Team
+## Team
 
 * **Amir Masoud Almasi - s337006 - amirmasoud.almasi@studenti.polito.it**
 * **Parastoo Alavi - s340942 - parastoo.alavi@studenti.polito.it**
@@ -22,7 +22,7 @@ adaptation.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 Emotion recognition aims to classify emotional states (e.g., Angry, Happy, Sad,
 Neutral) from speech signals. While recent large audio-language models can process
@@ -37,7 +37,7 @@ In this project, we:
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 .
@@ -63,14 +63,14 @@ The project uses two emotional speech datasets:
 * **ESD (Emotional Speech Dataset)** — used mainly for training
 * **IEMOCAP** — used mainly for evaluation and generalization testing
 
-⚠️ **IMPORTANT**
+**IMPORTANT**
 Raw audio files are **not included** in this repository due to dataset licensing
 restrictions and large file sizes. Users must download the datasets separately
 and place them in the appropriate folders.
 
 ---
 
-## 🧠 Methodology
+## Methodology
 
 1. **Data Exploration**
    Analyze label distributions, speaker statistics, and audio durations.
@@ -86,7 +86,7 @@ and place them in the appropriate folders.
 
 ---
 
-## 📈 Evaluation Metrics
+## Evaluation Metrics
 
 We report multiple metrics to ensure fair evaluation:
 
@@ -98,7 +98,7 @@ We report multiple metrics to ensure fair evaluation:
 
 ---
 
-## ⚠️ Risks & Limitations
+## Risks & Limitations
 
 * Emotion labels are subjective and noisy
 * Training data may contain speaker or recording bias
@@ -109,7 +109,7 @@ These limitations are explicitly discussed in the presentation and analysis.
 
 ---
 
-## 📄 Course Information
+## Course Information
 
 This project was developed as part of the **Applied Data Science Project** course in **Politecnico di Torino** and follows the structure required for:
 
@@ -119,7 +119,7 @@ This project was developed as part of the **Applied Data Science Project** cours
 
 ---
 
-## 📝 License & Notes
+## License & Notes
 
 * This repository is for **academic purposes only**
 * External libraries (e.g., EmoBox) are used under their original licenses
