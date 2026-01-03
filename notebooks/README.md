@@ -1,23 +1,42 @@
 # Notebooks Folder
 
-This directory contains all Jupyter notebooks developed throughout the **Multimodal Emotion Recognition Using Large Language Models** project. The notebooks support exploratory analysis, data preparation, model evaluation, and experimentation. They serve as a bridge between conceptual design and implementation, providing an interactive environment for testing ideas and documenting technical progress.
+This folder contains Jupyter notebooks used for data exploration, baseline experiments, and result analysis in the Applied Data Science Project.
+
+The notebooks are mainly used for **interactive analysis and visualization**. All heavy training and large-scale evaluations are implemented in standalone
+Python scripts located in 'scripts' folder of the repository.
 
 ---
 
-## Folder Structure
+## Notebook Descriptions
 
-### 1. Data Exploration and Preparation  
-Notebooks focused on loading, cleaning, preprocessing, and analyzing the dataset. This section prepares data for zero-shot evaluation and fine-tuning stages.  
-- `01_data_exploration.ipynb`
+### `01_data_exploration.ipynb`
+This notebook performs an initial exploration of the ESD and IEMOCAP datasets.
+It includes:
+- Emotion label distribution analysis
+- Speaker and session statistics
+- Audio duration analysis
+- Basic waveform visualizations
 
-### 2. Zero-Shot Evaluation  
-Notebooks used to run baseline experiments with the chosen MLLM in zero-shot mode. These notebooks document early performance, prompt engineering attempts, and error analysis.  
-- `zero_shot_eval.ipynb` (to be added later)
+The goal of this notebook is to understand dataset characteristics, identify
+potential biases, and guide the design of the experiments.
 
-### 3. Fine-Tuning and Model Development  
-Notebooks dedicated to parameter-efficient fine-tuning (PEFT) experiments, training procedures, and hyperparameter exploration.  
-- `fine_tuning_peft.ipynb` (to be added later)
+---
 
-### 4. Model Comparison and Analysis  
-Notebooks created to compare zero-shot and fine-tuned models, compute metrics, run evaluations, and generate plots.  
-- (To be added during mid and final development phases.)
+### `02_zero_shot_iemocap.ipynb`
+This notebook evaluates the pre-trained Voxtral-Mini-3B model in a **zero-shot**
+setting on the IEMOCAP dataset.
+
+Experiments include:
+- Audio-only inference
+- Audio + transcript inference
+- Evaluation using Accuracy and Macro-F1
+
+This notebook establishes a baseline performance before any fine-tuning.
+
+---
+
+### `03_zero_shot_esd.ipynb`
+This notebook applies the same zero-shot evaluation strategy to the ESD dataset.
+
+It highlights how general audio-language models perform on emotion recognition
+without task-specific training and allows comparison with IEMOCAP results.
