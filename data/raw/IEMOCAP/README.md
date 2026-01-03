@@ -23,7 +23,7 @@ IMPORTANT: The actual audio files are NOT included in this repository. The datas
 
 ---
 
-## Expected Structure (example)
+## Expected Structure
 
 ```text
 IEMOCAP/
