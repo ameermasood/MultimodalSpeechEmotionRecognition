@@ -1,0 +1,90 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.env
+.venv
+venv/
+ENV/
+
+# ================================
+# Jupyter / Colab
+# ================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ================================
+# PyTorch / Model artifacts
+# ================================
+checkpoints/
+outputs/
+runs/
+wandb/
+lightning_logs/
+
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# ================================
+# Hugging Face cache
+# ================================
+.cache/
+huggingface/
+hf_cache/
+
+# ================================
+# Datasets & data artifacts
+# ================================
+data/
+datasets/
+*.wav
+*.flac
+*.mp3
+*.csv
+*.tsv
+*.json
+*.pickle
+*.pkl
+
+# ================================
+# Logs & temporary files
+# ================================
+logs/
+*.log
+tmp/
+temp/
+
+# ================================
+# OS / Editor files
+# ================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ================================
+# Results & figures
+# ================================
+figures/
+plots/
+results/
+
+# ================================
+# LaTeX build artifacts (if paper included)
+# ================================
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
