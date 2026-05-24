@@ -7,10 +7,11 @@ Script: Zero-Shot Evaluation on IEMOCAP Dataset
 
 Usage:
     python3 scripts/evaluation/evaluate_zero_shot_iemocap.py \
-        --meta_path /path/to/EmoBox/data/iemocap/iemocap.json \
+        --meta_dir /path/to/EmoBox/data \
         --audio_root /path/to/iemocap \
         --base_model mistralai/Voxtral-Mini-3B-2507 \
-        --out_dir /path/to/outputs
+        --out_dir /path/to/outputs \
+        --fold 1
 """
 
 import argparse
@@ -113,12 +114,30 @@ def load_iemocap_test_df(meta_path: str, audio_root: str) -> pd.DataFrame:
     return df_mapped
 
 
+def resolve_iemocap_meta_path(meta_path: str | None, meta_dir: str | None, fold: int) -> str:
+    """Resolve either an explicit IEMOCAP JSON path or a fold JSON under a metadata root."""
+    if meta_path:
+        return meta_path
+    if not meta_dir:
+        raise ValueError("Provide either --meta_path or --meta_dir.")
+    candidates = [
+        os.path.join(meta_dir, "iemocap", f"fold_{fold}", f"iemocap_test_fold_{fold}.json"),
+        os.path.join(meta_dir, f"fold_{fold}", f"iemocap_test_fold_{fold}.json"),
+    ]
+    found = next((path for path in candidates if os.path.exists(path)), None)
+    if found is None:
+        raise FileNotFoundError(f"Missing IEMOCAP fold JSON. Tried: {candidates}")
+    return found
+
+
 def main():
     ap = argparse.ArgumentParser(description="Zero-Shot Voxtral Evaluation on IEMOCAP Dataset")
-    ap.add_argument("--meta_path", required=True, help="Path to EmoBox iemocap.json file")
+    ap.add_argument("--meta_path", default="", help="Path to an explicit EmoBox IEMOCAP JSON file")
+    ap.add_argument("--meta_dir", default="", help="Metadata root containing iemocap/fold_<N>/iemocap_test_fold_<N>.json")
     ap.add_argument("--audio_root", required=True, help="Path to raw IEMOCAP audio dataset root")
     ap.add_argument("--base_model", required=True, help="HuggingFace model ID or local directory")
     ap.add_argument("--out_dir", required=True, help="Output directory for predictions and metrics")
+    ap.add_argument("--fold", type=int, default=1, help="IEMOCAP fold index used when --meta_dir is provided")
     ap.add_argument("--batch_size", type=int, default=1, help="Batch size for Voxtral prediction")
     ap.add_argument("--device", default="cuda", help="Inference device: 'cuda', 'cpu', or 'mps'")
     args = ap.parse_args()
@@ -128,8 +147,9 @@ def main():
     print(f"Using device: {device}")
 
     # Load test dataset
-    print(f"Loading IEMOCAP EmoBox split from {args.meta_path}...")
-    df = load_iemocap_test_df(args.meta_path, args.audio_root)
+    meta_path = resolve_iemocap_meta_path(args.meta_path or None, args.meta_dir or None, args.fold)
+    print(f"Loading IEMOCAP EmoBox split from {meta_path}...")
+    df = load_iemocap_test_df(meta_path, args.audio_root)
     print(f"Kept {len(df)} test utterances.")
     if df.empty:
         raise RuntimeError("DataFrame is empty - please check dataset directories.")

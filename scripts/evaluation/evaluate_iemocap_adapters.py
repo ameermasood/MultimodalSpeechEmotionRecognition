@@ -651,11 +651,11 @@ def main():
 
         agg_rows.append({
             "adapter": adapter_name, "mode": "audio_only",
-            **{k: met_audio.get(k, np.nan) for k in ["accuracy","balanced_acc","macro_f1","weighted_f1","mcc","kappa","ece_10bins","latency_ms_p50","latency_ms_p90","latency_ms_p99","selective_risk_area"]},
+            **{k: met_audio.get(k, np.nan) for k in ["accuracy","balanced_accuracy","f1_macro","f1_weighted","mcc","kappa","ece_10bins","latency_ms_p50","latency_ms_p90","latency_ms_p99","selective_risk_area"]},
         })
         agg_rows.append({
             "adapter": adapter_name, "mode": "audio_plus_text",
-            **{k: met_text.get(k, np.nan) for k in ["accuracy","balanced_acc","macro_f1","weighted_f1","mcc","kappa","ece_10bins","latency_ms_p50","latency_ms_p90","latency_ms_p99","selective_risk_area"]},
+            **{k: met_text.get(k, np.nan) for k in ["accuracy","balanced_accuracy","f1_macro","f1_weighted","mcc","kappa","ece_10bins","latency_ms_p50","latency_ms_p90","latency_ms_p99","selective_risk_area"]},
             "mcnemar_chi2_audio_vs_text": mcn.get("chi_sq_stat", np.nan),
             "mcnemar_sig_p05_audio_vs_text": bool(mcn.get("significant_p05", False)),
         })
@@ -674,13 +674,13 @@ def main():
     df_agg.to_csv(os.path.join(agg_dir, "leaderboard_all_adapters_all_modes.csv"), index=False)
 
     # Pivot Plots
-    piv = df_agg.pivot_table(index="adapter", columns="mode", values=["accuracy","macro_f1"], aggfunc="first")
+    piv = df_agg.pivot_table(index="adapter", columns="mode", values=["accuracy","f1_macro"], aggfunc="first")
     piv.columns = [f"{a}_{b}" for a,b in piv.columns]
     piv = piv.reset_index()
 
     if len(piv) > 0:
         cols_acc = [c for c in piv.columns if c.startswith("accuracy_")]
-        cols_f1  = [c for c in piv.columns if c.startswith("macro_f1_")]
+        cols_f1  = [c for c in piv.columns if c.startswith("f1_macro_")]
         plot_bar_grouped(piv, "adapter", cols_acc, os.path.join(agg_dir, "compare_accuracy_by_adapter.png"), "Accuracy per Adapter")
         plot_bar_grouped(piv, "adapter", cols_f1, os.path.join(agg_dir, "compare_macro_f1_by_adapter.png"), "Macro-F1 per Adapter")
 

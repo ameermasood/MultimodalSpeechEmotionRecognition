@@ -40,11 +40,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from mer.data import (
-    CANONICAL_EMOTIONS,
-    normalize_prediction_text,
-    read_esd_transcript,
-)
+from mer.data import CANONICAL_EMOTIONS, normalize_prediction_text
 from mer.evaluation import classification_metrics
 from mer.inference.voxtral import add_zero_shot_predictions
 from mer.visualization import (
@@ -56,7 +52,7 @@ from mer.visualization import (
     set_premium_plot_style,
 )
 
-LABELS = list(CANONICAL_EMOTIONS) + ["Surprise"]
+LABELS = list(CANONICAL_EMOTIONS)
 LABELS_LOWER = [x.lower() for x in LABELS]
 
 ESD_LABEL_MAP = {
@@ -64,7 +60,6 @@ ESD_LABEL_MAP = {
     "happy": "Happy",
     "sad": "Sad",
     "neutral": "Neutral",
-    "surprise": "Surprise",
 }
 
 ESD_LABEL_SYNONYMS = {
@@ -76,9 +71,6 @@ ESD_LABEL_SYNONYMS = {
     "sad": "Sad",
     "neutral": "Neutral",
     "calm": "Neutral",
-    "surprise": "Surprise",
-    "surprised": "Surprise",
-    "astonished": "Surprise",
 }
 
 
@@ -111,10 +103,14 @@ def normalize_label(raw_text: str) -> str:
 
 def load_esd_test_df(meta_dir: str, audio_root: str, fold: int) -> pd.DataFrame:
     """Load the ESD test split and build absolute path records."""
-    split_dir = os.path.join(meta_dir, "data", "esd", f"fold_{fold}")
+    split_dirs = [
+        os.path.join(meta_dir, "data", "esd", f"fold_{fold}"),
+        os.path.join(meta_dir, "esd", f"fold_{fold}"),
+    ]
     candidates = [
-        os.path.join(split_dir, f"esd_test_fold_{fold}.jsonl"),
-        os.path.join(split_dir, f"test_fold_{fold}.jsonl"),
+        os.path.join(split_dir, filename)
+        for split_dir in split_dirs
+        for filename in (f"esd_test_fold_{fold}.jsonl", f"test_fold_{fold}.jsonl")
     ]
     test_jsonl = next((path for path in candidates if os.path.exists(path)), None)
     if test_jsonl is None:
@@ -159,6 +155,9 @@ def load_esd_test_df(meta_dir: str, audio_root: str, fold: int) -> pd.DataFrame:
                 continue
 
             emo = ESD_LABEL_MAP.get(raw_label.lower(), raw_label)
+            if emo not in LABELS:
+                continue
+
             utt_id = f"{spk}_{utt_suffix}"
             wav_path = os.path.join(audio_root, spk, emo, f"{utt_id}.wav")
 
