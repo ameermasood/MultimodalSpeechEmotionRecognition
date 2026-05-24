@@ -111,9 +111,14 @@ def normalize_label(raw_text: str) -> str:
 
 def load_esd_test_df(meta_dir: str, audio_root: str, fold: int) -> pd.DataFrame:
     """Load the ESD test split and build absolute path records."""
-    test_jsonl = os.path.join(meta_dir, "data", "esd", f"fold_{fold}", f"test_fold_{fold}.jsonl")
-    if not os.path.exists(test_jsonl):
-        raise FileNotFoundError(f"Missing ESD split JSONL: {test_jsonl}")
+    split_dir = os.path.join(meta_dir, "data", "esd", f"fold_{fold}")
+    candidates = [
+        os.path.join(split_dir, f"esd_test_fold_{fold}.jsonl"),
+        os.path.join(split_dir, f"test_fold_{fold}.jsonl"),
+    ]
+    test_jsonl = next((path for path in candidates if os.path.exists(path)), None)
+    if test_jsonl is None:
+        raise FileNotFoundError(f"Missing ESD split JSONL. Tried: {candidates}")
 
     # Preload transcripts for quick lookup
     transcripts = {}

@@ -1,17 +1,17 @@
-# Notebooks Folder
+# Notebooks
 
-This folder contains Jupyter notebooks used for data exploration, baseline experiments, and result analysis in the Applied Data Science Project.
+This folder contains Jupyter notebooks used for interactive exploration and portfolio narrative.
 
-The notebooks are mainly used for **interactive analysis and visualization**. All heavy training and large-scale evaluations are implemented in standalone
-Python scripts located in 'scripts' folder of the repository.
+Notebooks should stay lightweight. Training, zero-shot evaluation, and adapter evaluation are implemented as command-line scripts in `scripts/`.
 
 ---
 
-## Notebook Descriptions
+## Available Notebook
 
-### `01_data_exploration.ipynb`
+### `dataset_exploration.ipynb`
 This notebook performs an initial exploration of the ESD and IEMOCAP datasets.
 It includes:
+
 - Emotion label distribution analysis
 - Speaker and session statistics
 - Audio duration analysis
@@ -22,21 +22,11 @@ potential biases, and guide the design of the experiments.
 
 ---
 
-### `02_zero_shot_iemocap.ipynb`
-This notebook evaluates the pre-trained Voxtral-Mini-3B model in a **zero-shot**
-setting on the IEMOCAP dataset.
+## Script-Based Workflows
 
-Experiments include:
-- Audio-only inference
-- Audio + transcript inference
-- Evaluation using Accuracy and Macro-F1
+Zero-shot experiments now live in:
 
-This notebook establishes a baseline performance before any fine-tuning.
+- `scripts/evaluation/evaluate_zero_shot_esd.py`
+- `scripts/evaluation/evaluate_zero_shot_iemocap.py`
 
----
-
-### `03_zero_shot_esd.ipynb`
-This notebook applies the same zero-shot evaluation strategy to the ESD dataset.
-
-It highlights how general audio-language models perform on emotion recognition
-without task-specific training and allows comparison with IEMOCAP results.
+This keeps notebooks focused on exploration while making expensive evaluations reproducible from the command line.
