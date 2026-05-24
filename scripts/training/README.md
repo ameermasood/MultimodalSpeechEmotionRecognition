@@ -20,10 +20,5 @@ Main characteristics:
 
 ---
 
-### `train_voxtral_dora_transcript_esd.py`
-Fine-tunes Voxtral-Mini-3B using **DoRA** adapters with optional transcript input.
-
-Main characteristics:
-- Uses audio + text when transcripts are available
-- Applies transcript dropout to improve robustness
-- Trains only DoRA adapters while freezing the base model
+Additional local experimental training scripts may exist in a working copy, but
+the public training entry point is the LoRA/DoRA-capable ESD script above.

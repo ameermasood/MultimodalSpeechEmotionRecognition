@@ -1,32 +1,32 @@
-# Source Code Folder
+# Source Code
 
-This folder contains source code used in the project that is **not directly part
-of the experiment scripts**, including external libraries and supporting modules.
+This folder contains the Python source code for the project.
 
-In particular, this folder includes the **EmoBox** framework, which is used to
-manage datasets, evaluation protocols, and experiment configuration for
-multimodal emotion recognition.
+```text
+src/
++-- mer/      # Project package
++-- EmoBox/   # Optional local vendor/external code, ignored by git
+```
 
----
+## `src/mer`
 
-## EmoBox
+`src/mer` is the reusable package for this project. It contains the code used by
+the command-line scripts and future demo work:
 
-**EmoBox** is an open-source framework designed for benchmarking emotion
-recognition models.
+- `mer.data`: dataset paths, metadata, transcripts, and labels
+- `mer.inference`: prompt construction and Voxtral prediction helpers
+- `mer.modeling`: Voxtral loading, quantization, and PEFT adapter helpers
+- `mer.training`: collators, transforms, splits, and PEFT training utilities
+- `mer.evaluation`: metrics and statistical evaluation helpers
+- `mer.visualization`: reusable plotting utilities
+- `mer.config`: runtime configuration helpers
 
-In this project, EmoBox is used for:
-- Loading dataset metadata (ESD and IEMOCAP)
-- Managing train / validation / test splits
-- Standardizing evaluation pipelines
-- Ensuring consistency across experiments
+## `src/EmoBox`
 
-The EmoBox code is included here to make the project easier to run and reproduce.
+`src/EmoBox` is treated as external/vendor code and is ignored by git in the
+cleaned portfolio version of the repository.
 
----
+If you need EmoBox metadata or preprocessing tools, keep a local copy of EmoBox
+outside version control and point scripts to the generated metadata files.
 
-## Notes
-
-- EmoBox is **not developed by the authors of this project**.
-- The original EmoBox repository and license information are preserved.
-- Any project-specific logic (training, evaluation, fine-tuning) is implemented
-  outside this folder.
+Project-specific logic should live in `src/mer`, not in `src/EmoBox`.

@@ -103,10 +103,6 @@ Analyze audio-only vs audio-plus-transcript behavior
 | IEMOCAP adapter evaluation | Test cross-domain generalization |
 | Audio vs audio + transcript | Measure whether text helps or hurts predictions |
 
-The code includes an optional transcript dropout/corruption mechanism in the
-DoRA transcript training script. This is a robustness-oriented implementation
-option, not a separately named method from the original paper.
-
 ## Results Summary
 
 The paper reports that zero-shot Voxtral has limited balanced performance for
@@ -133,7 +129,6 @@ important when class difficulty and label distributions differ.
 +-- tests/                # Lightweight tests for reusable helpers
 +-- docs/                 # Artifact notes and project documentation
 +-- results/              # Generated metrics, plots, and reports
-+-- slides/               # Course presentations
 +-- pyproject.toml
 +-- README.md
 ```
@@ -168,7 +163,6 @@ Training:
 
 ```text
 scripts/training/train_voxtral_lora_esd.py
-scripts/training/train_voxtral_dora_transcript_esd.py
 ```
 
 Adapter evaluation:

@@ -47,9 +47,21 @@ hf_cache/
 src/EmoBox/
 
 # ================================
+# Local experimental scripts
+# ================================
+scripts/training/train_voxtral_dora_transcript_esd.py
+
+# ================================
 # Datasets & data artifacts
 # ================================
-data/
+data/*
+!data/README.md
+!data/raw/
+!data/raw/README.md
+!data/raw/ESD/
+!data/raw/ESD/README.md
+!data/raw/IEMOCAP/
+!data/raw/IEMOCAP/README.md
 !src/mer/data/
 !src/mer/data/**
 datasets/
@@ -96,7 +108,8 @@ results/
 *.fdb_latexmk
 *.synctex.gz
 
-================================
+# ================================
 # Documentation
-================================
+# ================================
 AGENTS.md
+slides/

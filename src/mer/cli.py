@@ -31,10 +31,6 @@ WORKFLOWS: dict[str, Workflow] = {
         "scripts/training/train_voxtral_lora_esd.py",
         "Fine-tune an audio-only LoRA adapter on ESD.",
     ),
-    "train-dora-transcript-esd": Workflow(
-        "scripts/training/train_voxtral_dora_transcript_esd.py",
-        "Fine-tune a DoRA adapter on ESD with transcript input.",
-    ),
     "evaluate-esd": Workflow(
         "scripts/evaluation/evaluate_esd_adapters.py",
         "Evaluate available PEFT adapters on ESD.",
@@ -58,7 +54,6 @@ ALIASES = {
     "zs-esd": "zero-shot-esd",
     "zs-iemocap": "zero-shot-iemocap",
     "train-lora": "train-lora-esd",
-    "train-dora": "train-dora-transcript-esd",
     "eval-esd": "evaluate-esd",
     "eval-esd-dora": "evaluate-esd-dora",
     "eval-iemocap": "evaluate-iemocap",
