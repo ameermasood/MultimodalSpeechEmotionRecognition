@@ -45,6 +45,8 @@ hf_cache/
 # Datasets & data artifacts
 # ================================
 data/
+!src/mer/data/
+!src/mer/data/**
 datasets/
 *.wav
 *.flac
