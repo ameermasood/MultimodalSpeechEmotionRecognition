@@ -11,7 +11,7 @@ Evaluations are performed in two modes:
 
 ## Scripts
 
-### `04_eval_all_adapters_esd.py`
+### `evaluate_esd_adapters.py`
 Evaluates all available fine-tuned adapters on the **ESD test set**.
 
 The script:
@@ -21,7 +21,7 @@ The script:
 
 ---
 
-### `04_eval_all_adapters_iemocap.py`
+### `evaluate_iemocap_adapters.py`
 Evaluates all available adapters on the **IEMOCAP dataset**.
 
 This script is mainly used to test **cross-dataset generalization**, since models
@@ -29,13 +29,13 @@ are trained on ESD but evaluated on IEMOCAP.
 
 ---
 
-### `04_zero_shot_dora_with_transcript_esd.py`
+### `evaluate_esd_dora_transcript.py`
 Runs **zero-shot evaluation** on ESD using Voxtral-Mini-3B with DoRA-style prompting.
 
 This script serves as a baseline for comparison with fine-tuned results.
 
 ---
 
-### `04_zero_shot_dora_with_transcript_iemocap.py`
+### `evaluate_iemocap_dora_transcript.py`
 Runs zero-shot evaluation on IEMOCAP using the same setup as the ESD zero-shot
 script, allowing direct comparison between datasets.

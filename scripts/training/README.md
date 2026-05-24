@@ -10,7 +10,7 @@ distribution of emotion classes.
 
 ## Scripts
 
-### `03_train_lora_voxtral_esd.py`
+### `train_voxtral_lora_esd.py`
 Fine-tunes Voxtral-Mini-3B using **LoRA** adapters.
 
 Main characteristics:
@@ -20,7 +20,7 @@ Main characteristics:
 
 ---
 
-### `03_train_dora_voxtral_with_transcript.py`
+### `train_voxtral_dora_transcript_esd.py`
 Fine-tunes Voxtral-Mini-3B using **DoRA** adapters with optional transcript input.
 
 Main characteristics:
