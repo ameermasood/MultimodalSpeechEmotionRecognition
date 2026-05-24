@@ -42,6 +42,11 @@ huggingface/
 hf_cache/
 
 # ================================
+# External/vendor code
+# ================================
+src/EmoBox/
+
+# ================================
 # Datasets & data artifacts
 # ================================
 data/
