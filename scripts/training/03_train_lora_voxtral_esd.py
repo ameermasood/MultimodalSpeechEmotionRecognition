@@ -28,74 +28,30 @@ import os
 # Disable tokenizer parallelism to prevent deadlocks in multi-process DataLoaders.
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-import re
-import json
-import random
 import argparse
-from pathlib import Path
 from collections import Counter
-from dataclasses import dataclass
-from typing import Any, Dict, List
 
-import numpy as np
-import torch
-import torch.nn.functional as F
 from datasets import Dataset
 
 from transformers import (
     AutoProcessor,
-    VoxtralForConditionalGeneration,
-    TrainingArguments,
     Trainer,
     TrainerCallback,
     EarlyStoppingCallback,
-    BitsAndBytesConfig,
 )
 
 from peft import (
-    LoraConfig,
     get_peft_model,
-    TaskType,
-    prepare_model_for_kbit_training,
 )
 
-# Define the target taxonomy for emotion classification.
-EMOS = ["Angry", "Happy", "Sad", "Neutral"]
-KEEP = set(EMOS)
-
-def to_abs(p: str) -> str:
-    """Converts relative paths to absolute system paths."""
-    return os.path.abspath(os.path.expanduser(p))
-
-def safe_makedirs(p: str):
-    """Ensures the existence of the output directory structure."""
-    os.makedirs(p, exist_ok=True)
-
-def set_seed(seed: int):
-    """
-    Enforces deterministic behavior across random number generators (Python, NumPy, PyTorch)
-    to ensure reproducibility of experimental results.
-    """
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-
-def speaker_is_english(wav_rel: str) -> bool:
-    """
-    Heuristic filter to isolate English speakers (IDs 11-20) from the ESD dataset,
-    ensuring linguistic consistency in the training data.
-    """
-    m = re.search(r"downloads/esd/(\d{4})/", (wav_rel or "").replace("\\", "/"))
-    if not m:
-        return False
-    spk = int(m.group(1))
-    return 11 <= spk <= 20
-
-def norm_emo(e: str) -> str:
-    """Normalizes emotion labels to Capitalized format."""
-    return (e or "").strip().capitalize()
+from mer.data.labels import CANONICAL_EMOTIONS
+from mer.modeling.voxtral import load_voxtral_for_training, tokenizer_pad_id
+from mer.training.arguments import create_training_arguments
+from mer.training.collators import VoxtralPaddingCollator
+from mer.training.esd import load_esd_training_records, split_balanced_train_val
+from mer.training.peft import create_lora_config
+from mer.training.transforms import VoxtralChatAudioTransform
+from mer.training.utils import safe_makedirs, set_seed
 
 class SimpleLogCallback(TrainerCallback):
     """
@@ -109,182 +65,6 @@ class SimpleLogCallback(TrainerCallback):
             print(f"step={state.global_step} | loss={logs['loss']:.4f}", flush=True)
         if "eval_loss" in logs:
             print(f"epoch={state.epoch:.2f} | step={state.global_step} | eval_loss={logs['eval_loss']:.4f}", flush=True)
-
-# -------------------------
-# Class: VoxtralChatAudioTransform
-# -------------------------
-class VoxtralChatAudioTransform:
-    """
-    Data Transformation Pipeline.
-
-    This class handles the tokenization and formatting of audio-text pairs.
-    Crucially, it implements a workaround for the 'assistant-role' constraint
-    in the mistral_common library.
-
-    Mechanism:
-    1.  Constructs a Single-Turn conversation consisting ONLY of a USER message.
-    2.  Manually appends the target label tokens to the sequence.
-    3.  Generates a loss mask to ensure backpropagation occurs only on the label tokens.
-    """
-    def __init__(self, processor, prompt_text: str, max_new_tokens: int = 8, debug_once: bool = True):
-        self.proc = processor
-        self.tok = processor.tokenizer
-        self.prompt_text = prompt_text
-        self.max_new_tokens = int(max_new_tokens)
-        self.debug_once = bool(debug_once)
-        self._printed = False
-
-        # Ensure the tokenizer has a valid padding token.
-        if self.tok.pad_token_id is None:
-            self.tok.pad_token = self.tok.eos_token
-
-    def _user_content(self, wav_path: str):
-        # Formats the input payload as expected by the multimodal processor.
-        return [
-            {"type": "audio", "path": wav_path},
-            {"type": "text", "text": self.prompt_text},
-        ]
-
-    def _encode_one(self, wav_path: str, label_text: str) -> Dict[str, torch.Tensor]:
-        # Step 1: Encode the USER prefix (Audio + Instruction).
-        # We deliberately omit the 'assistant' role to avoid validation errors.
-        msgs = [
-            {"role": "user", "content": self._user_content(wav_path)},
-        ]
-        enc = self.proc.apply_chat_template(
-            msgs,
-            tokenize=True,
-            return_dict=True,
-            return_tensors="pt",
-        )
-
-        prefix_ids = enc["input_ids"][0]
-        prefix_attn = enc["attention_mask"][0]
-        prefix_len = int(prefix_ids.numel())
-
-        # Step 2: Manually tokenize and append the Target Label.
-        # A leading space is added for tokenization consistency.
-        lab_ids = self.tok.encode(" " + label_text, add_special_tokens=False)
-        if self.tok.eos_token_id is not None:
-            lab_ids = lab_ids + [self.tok.eos_token_id]
-
-        # Truncate label to max_new_tokens to prevent unbounded generation during training.
-        lab_ids = lab_ids[: max(1, self.max_new_tokens)]
-        lab = torch.tensor(lab_ids, dtype=torch.long)
-
-        # Concatenate Prefix and Label to form the full input sequence.
-        input_ids = torch.cat([prefix_ids, lab], dim=0)
-        attention_mask = torch.cat([prefix_attn, torch.ones_like(lab)], dim=0)
-
-        # Step 3: Construct the Labels Tensor with Masking.
-        # We set indices corresponding to the prefix to -100, which is the
-        # default ignore_index for CrossEntropyLoss in PyTorch.
-        # This ensures the model is not penalized for the instruction prompts.
-        labels = input_ids.clone()
-        labels[:prefix_len] = -100
-
-        out = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": labels,
-        }
-
-        # Step 4: Propagate multimodal features (audio tensors) to the output dict.
-        for k, v in enc.items():
-            if k in out:
-                continue
-            if torch.is_tensor(v):
-                out[k] = v[0]
-
-        # Debug logging for the first sample to verify tensor shapes.
-        if self.debug_once and (not self._printed):
-            self._printed = True
-            print("DEBUG out keys:", sorted(list(out.keys())), flush=True)
-            if "input_features" in out:
-                print("DEBUG input_features:", tuple(out["input_features"].shape), flush=True)
-            print("DEBUG prefix_len:", prefix_len, "| total_len:", int(input_ids.numel()), flush=True)
-            print("DEBUG label_text:", label_text, flush=True)
-
-        return out
-
-    def __call__(self, ex: Dict[str, Any]) -> Dict[str, Any]:
-        """Dataset map function supporting both batched and unbatched inputs."""
-        is_batched = isinstance(ex["audio_path"], list)
-        def as_list(x): return x if isinstance(x, list) else [x]
-
-        audio_paths = as_list(ex["audio_path"])
-        labels_txt = as_list(ex["label"])
-
-        outs = [self._encode_one(wp, lb) for wp, lb in zip(audio_paths, labels_txt)]
-        if not outs:
-            return {}
-
-        keys = outs[0].keys()
-        packed = {k: [o[k] for o in outs] for k in keys}
-        return packed if is_batched else {k: v[0] for k, v in packed.items()}
-
-# -------------------------
-# Collator
-# -------------------------
-def _pad_right_to_shape(t: torch.Tensor, target_shape: List[int], pad_value: float = 0.0) -> torch.Tensor:
-    """Helper function to pad tensors to a unified shape for batching."""
-    if list(t.shape) == target_shape:
-        return t
-    pad = []
-    # Calculate padding required for each dimension.
-    for cur, tgt in zip(reversed(t.shape), reversed(target_shape)):
-        pad.extend([0, int(tgt) - int(cur)])
-    return F.pad(t, pad, mode="constant", value=pad_value)
-
-@dataclass
-class VoxtralPaddingCollator:
-    """
-    Custom Data Collator.
-    Dynamically pads input sequences and multimodal features to the maximum length
-    present in the current batch (dynamic padding), which is more memory efficient
-    than padding to a fixed global maximum.
-    """
-    pad_token_id: int
-
-    def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
-        batch = {}
-
-        # Pad text-based tensors (IDs, Masks, Labels)
-        for key in ["input_ids", "attention_mask", "labels"]:
-            tensors = [f[key] for f in features]
-            max_len = max(int(t.size(0)) for t in tensors)
-            if key == "labels":
-                pv = -100  # Ignore index for loss
-            elif key == "attention_mask":
-                pv = 0     # Masked out
-            else:
-                pv = self.pad_token_id
-            padded = []
-            for t in tensors:
-                diff = max_len - int(t.size(0))
-                if diff > 0:
-                    pad = torch.full((diff,), pv, dtype=t.dtype)
-                    padded.append(torch.cat([t, pad], dim=0))
-                else:
-                    padded.append(t)
-            batch[key] = torch.stack(padded)
-
-        # Pad multimodal features (e.g., 'input_features' for audio)
-        extra_keys = set(features[0].keys()) - {"input_ids", "attention_mask", "labels"}
-        for key in sorted(extra_keys):
-            v0 = features[0][key]
-            if not torch.is_tensor(v0):
-                continue
-            tensors = [f[key] for f in features]
-            nd = tensors[0].dim()
-            if any(t.dim() != nd for t in tensors):
-                continue
-            # Determine maximum shape across all dimensions
-            max_shape = [max(int(t.shape[d]) for t in tensors) for d in range(nd)]
-            pv = 0.0 if tensors[0].dtype.is_floating_point else 0
-            batch[key] = torch.stack([_pad_right_to_shape(t, max_shape, pv) for t in tensors])
-
-        return batch
 
 # -------------------------
 # Main Execution Block
@@ -331,63 +111,27 @@ def main():
         "Angry, Happy, Sad, Neutral."
     )
 
-    # ---------------------------------------------------------
-    # Data Loading Phase
-    # ---------------------------------------------------------
-    jsonl_path = os.path.join(args.meta_dir, "esd", f"fold_{args.fold}", f"esd_train_fold_{args.fold}.jsonl")
-    with open(jsonl_path, "r") as f:
-        rows = [json.loads(line) for line in f if line.strip()]
-
-    recs = []
-    for r in rows:
-        emo = norm_emo(r.get("emo", r.get("label", "")))
-        wav_rel = (r.get("wav") or "").replace("\\", "/")
-
-        # Filtering logic: Keep specific emotions and English speakers only.
-        if emo not in KEEP:
-            continue
-        if not speaker_is_english(wav_rel):
-            continue
-
-        wav_abs = to_abs(os.path.join(args.audio_root, wav_rel))
-        if not os.path.isfile(wav_abs):
-            continue
-
-        recs.append({"audio_path": wav_abs, "label": emo})
+    recs, load_stats = load_esd_training_records(
+        args.meta_dir,
+        args.audio_root,
+        args.fold,
+        labels=CANONICAL_EMOTIONS,
+        include_transcripts=False,
+    )
 
     if not recs:
         raise RuntimeError("No training samples found. Check meta_dir/audio_root and speaker filter.")
+    print(
+        f"Loaded train-json samples: {len(recs)} | missing_audio={load_stats['missing_audio']}",
+        flush=True,
+    )
 
-    # ---------------------------------------------------------
-    # Stratified Splitting (Train vs Validation)
-    # ---------------------------------------------------------
-    rng = random.Random(args.seed)
-    by = {e: [] for e in EMOS}
-    for r in recs:
-        by[r["label"]].append(r)
-
-    train_l, val_l = [], []
-    for e in EMOS:
-        lst = by[e]
-        rng.shuffle(lst)
-        # Reserve strictly 'val_per_class' samples for validation
-        v = min(int(args.val_per_class), len(lst))
-        val_l.extend(lst[:v])
-        train_l.extend(lst[v:])
-
-    if not train_l:
-        raise RuntimeError("Train set became empty after carving validation. Reduce val_per_class.")
-
-    # Optional: Downsample training data to ensure balanced classes (undersampling majority class)
-    tcnt = Counter([r["label"] for r in train_l])
-    min_c = min(tcnt.values())
-    t_by = {e: [] for e in EMOS}
-    for r in train_l:
-        t_by[r["label"]].append(r)
-    final_train = []
-    for e in EMOS:
-        final_train.extend(t_by[e][:min_c])
-    rng.shuffle(final_train)
+    final_train, val_l = split_balanced_train_val(
+        recs,
+        val_per_class=args.val_per_class,
+        seed=args.seed,
+        labels=CANONICAL_EMOTIONS,
+    )
 
     print("Train size:", len(final_train), " | Val size:", len(val_l), flush=True)
     print("Train class counts:", Counter([r["label"] for r in final_train]), flush=True)
@@ -410,93 +154,35 @@ def main():
     train_ds.set_transform(transform)
     val_ds.set_transform(transform)
 
-    # Quantization Config (if enabled)
-    if args.load_in_4bit:
-        bnb = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",  # Normalized Float 4
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_compute_dtype=torch.float16,
-        )
-        model = VoxtralForConditionalGeneration.from_pretrained(
-            args.model_id,
-            trust_remote_code=True,
-            quantization_config=bnb,
-            device_map="auto",
-            attn_implementation="sdpa", # Scaled Dot-Product Attention (FlashAttention compatible)
-        )
-        model.config.use_cache = False
-        model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
-    else:
-        model = VoxtralForConditionalGeneration.from_pretrained(
-            args.model_id,
-            trust_remote_code=True,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            attn_implementation="sdpa",
-        )
-        model.config.use_cache = False
-        # Enable Gradient Checkpointing to save memory
-        try:
-            model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
-        except Exception:
-            try:
-                model.gradient_checkpointing_enable()
-            except Exception:
-                pass
+    model = load_voxtral_for_training(args.model_id, load_in_4bit=args.load_in_4bit)
 
     # ---------------------------------------------------------
     # PEFT Adapter Injection (LoRA/DoRA)
     # ---------------------------------------------------------
-    peft_cfg = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
+    peft_cfg = create_lora_config(
         r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        lora_dropout=args.lora_dropout,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-        bias="none",
+        alpha=args.lora_alpha,
+        dropout=args.lora_dropout,
         use_dora=args.use_dora,
     )
     model = get_peft_model(model, peft_cfg)
     model.print_trainable_parameters()
 
-    pad_id = proc.tokenizer.pad_token_id
-    if pad_id is None:
-        pad_id = proc.tokenizer.eos_token_id
-    if pad_id is None:
-        raise RuntimeError("Tokenizer has neither pad_token_id nor eos_token_id.")
+    pad_id = tokenizer_pad_id(proc.tokenizer)
 
     # ---------------------------------------------------------
     # Training Loop Definition
     # ---------------------------------------------------------
-    train_args = TrainingArguments(
+    train_args = create_training_arguments(
         output_dir=args.output_dir,
-        per_device_train_batch_size=args.train_bs,
-        per_device_eval_batch_size=args.eval_bs,
+        train_batch_size=args.train_bs,
+        eval_batch_size=args.eval_bs,
         gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr,
-
-        # Scheduler: Warmup -> Cosine Decay
-        warmup_steps=50,
-        lr_scheduler_type="cosine",
-
         num_train_epochs=args.epochs,
         weight_decay=args.weight_decay,
-        fp16=True, # Mixed Precision Training
-
-        logging_steps=10,
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        save_total_limit=2,
-
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_loss",
-        greater_is_better=False,
-
-        remove_unused_columns=False, # Essential for custom multimodal datasets
         dataloader_num_workers=args.num_workers,
-        report_to="none",
-        optim="paged_adamw_8bit" if args.load_in_4bit else "adamw_torch",
+        load_in_4bit=args.load_in_4bit,
     )
 
     callbacks = [SimpleLogCallback(), EarlyStoppingCallback(early_stopping_patience=args.patience)]

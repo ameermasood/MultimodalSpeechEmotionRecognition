@@ -13,6 +13,7 @@ from mer.modeling.adapters import (
     resolve_adapter_dir,
     safe_adapter_name,
 )
+from mer.modeling.voxtral import load_voxtral_for_training, tokenizer_pad_id
 
 __all__ = [
     "ADAPTER_CONFIG",
@@ -26,4 +27,6 @@ __all__ = [
     "load_adapter_config",
     "resolve_adapter_dir",
     "safe_adapter_name",
+    "load_voxtral_for_training",
+    "tokenizer_pad_id",
 ]
