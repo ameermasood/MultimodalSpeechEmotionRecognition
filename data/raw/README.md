@@ -1,18 +1,17 @@
 # Raw Data
 
-This folder is reserved for local raw dataset copies.
+This folder is reserved for local raw datasets.
 
-Expected local folders:
+Expected contents:
 
-```text
-data/raw/
-+-- ESD/
-+-- IEMOCAP/
-```
+- **`ESD/`**  
+  Local Emotional Speech Dataset copy.
 
-The actual datasets are not included in this repository because of licensing and
-file size constraints.
+- **`IEMOCAP/`**  
+  Local IEMOCAP dataset copy.
 
-Use the original dataset directory structures where possible. The training and
-evaluation scripts accept explicit paths, so the exact local location can also
-be outside this repository.
+The actual audio files are not included in this repository because of licensing
+and size constraints.
+
+Use the original dataset structures where possible. Scripts receive paths
+through command-line arguments, so datasets may also be stored outside the repo.

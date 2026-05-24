@@ -1,32 +1,35 @@
-# Core deep learning
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
-
-# Hugging Face ecosystem
-transformers>=4.38.0
-datasets>=2.16.0
-accelerate>=0.26.0
-evaluate>=0.4.0
-peft>=0.9.0
-
-# Audio processing
-librosa>=0.10.0
-soundfile>=0.12.1
-audioread>=3.0.1
-
-# Data handling & utilities
+# Core numerical stack
 numpy>=1.24.0
 pandas>=2.0.0
 scipy>=1.10.0
 tqdm>=4.66.0
 
-# Evaluation & metrics
+# Deep learning
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# Hugging Face and PEFT
+# Voxtral requires a Transformers release that includes VoxtralForConditionalGeneration.
+transformers>=4.55.4
+datasets>=2.16.0
+accelerate>=0.26.0
+peft>=0.9.0
+
+# Audio loading used by audio processors and notebooks
+librosa>=0.10.0
+soundfile>=0.12.1
+
+# Evaluation and metrics
 scikit-learn>=1.3.0
 
-# Visualization (used in notebooks / analysis)
+# Visualization for notebooks and report figures
 matplotlib>=3.7.0
 seaborn>=0.13.0
 
-# Configuration & misc
-pyyaml>=6.0.1
+# Notebook exploration
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Optional CUDA 4-bit quantization dependency.
+# Install manually on compatible GPU systems if using --load_in_4bit:
+# bitsandbytes>=0.43.0

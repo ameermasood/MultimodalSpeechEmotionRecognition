@@ -1,6 +1,6 @@
 # Scripts
 
-This folder contains command-line workflow scripts for training and evaluation.
+This folder contains task-based entry points for the modular workflow.
 
 Most users should prefer the package CLI:
 
@@ -8,36 +8,26 @@ Most users should prefer the package CLI:
 mer list
 ```
 
-The scripts remain available as direct Python entry points for debugging,
-experimentation, and transparent reproducibility.
+The direct scripts remain useful for debugging, transparency, and reproducing
+individual experiment stages.
 
-## Layout
+## Folder Structure
 
-```text
-scripts/
-+-- training/
-+-- evaluation/
-```
+- **`training/`**  
+  Fine-tuning entry points.
 
-## Public Workflows
+- **`evaluation/`**  
+  Zero-shot and adapter evaluation entry points.
 
-Training:
-
-```bash
-mer train-lora-esd --help
-```
-
-Evaluation:
+## Main Workflows
 
 ```bash
 mer zero-shot-esd --help
 mer zero-shot-iemocap --help
+mer train-lora-esd --help
 mer evaluate-esd --help
 mer evaluate-iemocap --help
-mer evaluate-esd-dora --help
-mer evaluate-iemocap-dora --help
 ```
 
-All generated predictions, figures, metrics, logs, and checkpoints should be
-written to ignored local artifact folders such as `results/`, `logs/`, or
-`checkpoints/`.
+Generated predictions, figures, metrics, logs, and checkpoints should be written
+to ignored local folders such as `results/`, `logs/`, and `checkpoints/`.

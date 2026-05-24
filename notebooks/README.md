@@ -2,27 +2,18 @@
 
 This folder contains lightweight notebooks for exploration and interpretation.
 
-The only public notebook is:
+## Contents
 
-```text
-dataset_exploration.ipynb
-```
+- **`dataset_exploration.ipynb`**  
+  Explores ESD and IEMOCAP label distributions, speaker/session structure,
+  duration patterns, and selected audio characteristics.
 
-It is intended for:
+Notebooks are kept for:
 
-- Dataset exploration
-- Label distribution checks
-- Speaker/session summaries
-- Audio duration analysis
-- Visual analysis that supports the project narrative
+- exploratory analysis
+- visual checks
+- portfolio narrative
+- understanding dataset characteristics
 
-Training, zero-shot evaluation, and adapter evaluation should stay in scripts or
-the `mer` CLI, not in notebooks.
-
-Useful commands:
-
-```bash
-mer list
-mer zero-shot-esd --help
-mer evaluate-esd --help
-```
+Training, zero-shot evaluation, and adapter evaluation are handled by scripts
+and the `mer` CLI.

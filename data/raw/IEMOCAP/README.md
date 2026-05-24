@@ -1,19 +1,20 @@
 # IEMOCAP
 
-This folder is reserved for a local copy of the IEMOCAP dataset.
+This folder is reserved for a local copy of IEMOCAP.
 
-IEMOCAP is used for:
+In this project, IEMOCAP is used for:
 
-- Zero-shot evaluation
-- Cross-domain evaluation of adapters trained on ESD
+- zero-shot evaluation
+- cross-domain evaluation of adapters trained on ESD
 
-The public project uses the four-class paper-aligned setup:
+The paper-aligned setup uses:
 
 ```text
 Angry, Happy, Sad, Neutral
 ```
 
-IEMOCAP `excited` is mapped to `Happy`, following common IEMOCAP practice.
+IEMOCAP `excited` is mapped to `Happy`.
 
-Raw audio is not included in git. Download IEMOCAP through the official license
-process and keep the original directory structure locally.
+Raw audio is not stored in git. Download IEMOCAP through the official license
+process and keep the local directory structure consistent with the dataset
+release.

@@ -1,17 +1,15 @@
 # Source Code
 
-This folder contains the Python source code for the project.
+This folder contains the reusable Python source code.
 
-```text
-src/
-+-- mer/      # Project package
-+-- EmoBox/   # Optional local vendor/external code, ignored by git
-```
+## Folder Structure
+
+- **`mer/`**  
+  Main project package used by scripts, tests, notebooks, and future demo work.
 
 ## `src/mer`
 
-`src/mer` is the reusable package for this project. It contains the code used by
-the command-line scripts and future demo work:
+The package is organized by responsibility:
 
 - `mer.data`: dataset paths, metadata, transcripts, and labels
 - `mer.inference`: prompt construction and Voxtral prediction helpers
@@ -21,12 +19,12 @@ the command-line scripts and future demo work:
 - `mer.visualization`: reusable plotting utilities
 - `mer.config`: runtime configuration helpers
 
-## `src/EmoBox`
+Project-specific code should live in `src/mer`.
 
-`src/EmoBox` is treated as external/vendor code and is ignored by git in the
-cleaned portfolio version of the repository.
+## CLI
 
-If you need EmoBox metadata or preprocessing tools, keep a local copy of EmoBox
-outside version control and point scripts to the generated metadata files.
+The package exposes the project command:
 
-Project-specific logic should live in `src/mer`, not in `src/EmoBox`.
+```bash
+mer list
+```

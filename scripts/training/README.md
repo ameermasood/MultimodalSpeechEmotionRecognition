@@ -1,45 +1,31 @@
 # Training Scripts
 
-This folder contains the public training entry point for ESD fine-tuning.
+This folder contains the public fine-tuning entry point.
 
-## `train_voxtral_lora_esd.py`
+## Contents
 
-Fine-tunes Voxtral-Mini-3B on ESD using PEFT adapters.
+- **`train_voxtral_lora_esd.py`**  
+  Fine-tunes Voxtral-Mini-3B on ESD using PEFT adapters.
 
-Main characteristics:
+## Main Characteristics
 
-- Uses ESD as the training dataset
-- Uses audio-only input
-- Freezes the base model
-- Trains low-rank adapter weights
-- Supports LoRA by default
-- Can enable DoRA through the script arguments
+- ESD training data
+- audio-only input
+- frozen base model
+- trainable low-rank adapter weights
+- LoRA by default
+- DoRA available through script arguments
 
-Preferred CLI usage:
+## Usage
+
+Preferred CLI command:
 
 ```bash
 mer train-lora-esd --help
 ```
 
-Direct script usage:
+Direct script command:
 
 ```bash
 python scripts/training/train_voxtral_lora_esd.py --help
 ```
-
-## Outputs
-
-Training outputs should be written to an ignored local checkpoint folder, for
-example:
-
-```text
-checkpoints/<run_name>/
-```
-
-Do not commit model weights, optimizer states, logs, or generated checkpoints.
-
-## Local Experiments
-
-Additional local training scripts may exist in a working copy. They are not part
-of the public paper-aligned workflow unless they are explicitly restored and
-documented.

@@ -2,13 +2,13 @@
 
 This folder is reserved for a local copy of the Emotional Speech Dataset.
 
-ESD is used for:
+In this project, ESD is used for:
 
-- Zero-shot evaluation
-- PEFT fine-tuning on acted emotional speech
-- In-domain adapter evaluation
+- zero-shot evaluation
+- PEFT fine-tuning
+- in-domain adapter evaluation
 
-The public project uses the four-class paper-aligned setup:
+The paper-aligned setup uses:
 
 ```text
 Angry, Happy, Sad, Neutral
@@ -16,5 +16,5 @@ Angry, Happy, Sad, Neutral
 
 ESD `Surprise` is excluded from the main experiments.
 
-Raw audio is not included in git. Download ESD from its official source and keep
-the original directory structure locally.
+Raw audio is not stored in git. Download ESD from its official source and keep
+the local directory structure consistent with the dataset release.

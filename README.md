@@ -1,179 +1,201 @@
 # Multimodal Speech Emotion Recognition via Parameter-Efficient Fine-Tuning of Audio-Language Models
 
-This project explores speech emotion recognition with Voxtral-Mini-3B, a large
-audio-language model. It compares zero-shot inference with parameter-efficient
-fine-tuning, studies audio-only versus audio-plus-transcript inputs, and tests
-whether models trained on acted speech generalize to conversational speech.
+This repository contains our multimodal speech emotion recognition project using
+Voxtral-Mini-3B. The system treats emotion recognition as constrained text
+generation, compares zero-shot and fine-tuned settings, and evaluates whether
+audio-only or audio-plus-transcript prompting is more reliable across datasets.
 
-## What It Does
+## Method Overview
 
-Given a speech recording, the system predicts one of four emotion labels:
+The project follows a staged speech emotion recognition pipeline:
+
+1. Prepare local ESD and IEMOCAP paths and metadata.
+2. Run zero-shot Voxtral evaluation on both datasets.
+3. Fine-tune PEFT adapters on ESD.
+4. Evaluate adapters on the ESD test split.
+5. Evaluate ESD-trained adapters on IEMOCAP for cross-domain transfer.
+6. Compare audio-only and audio-plus-transcript inference.
+7. Report metrics, confusion patterns, and results.
+
+The model outputs one label from the four-class emotion set:
 
 ```text
 Angry, Happy, Sad, Neutral
 ```
 
-The model can use:
+## Model Setup
 
-- Audio only
-- Audio plus transcript text, when available
+The project compares zero-shot Voxtral against PEFT-adapted Voxtral.
 
-Speech emotion recognition is treated as constrained text generation: Voxtral is
-prompted to listen to the utterance and output exactly one emotion label.
+| Setting | Input | Adaptation | Output |
+|---|---|---|---|
+| Zero-shot | Audio or audio + transcript | None | Emotion label |
+| LoRA | Audio or audio + transcript | Low-rank PEFT adapter | Emotion label |
+| DoRA | Audio or audio + transcript | Weight-decomposed PEFT adapter | Emotion label |
 
-## Why This Project Matters
-
-Modern audio-language models can understand speech, but they are not necessarily
-strong emotion recognizers out of the box. This project investigates:
-
-- How well Voxtral performs without task-specific training
-- How much LoRA and DoRA adapters improve performance
-- Whether transcripts help or interfere with emotion recognition
-- How well an ESD-trained model transfers to IEMOCAP
-
-## Datasets
-
-The experiments use two speech emotion datasets:
-
-- **ESD**, the Emotional Speech Dataset, used for fine-tuning and in-domain
-  evaluation.
-- **IEMOCAP**, used for cross-domain evaluation on conversational speech.
-
-## Method Overview
-
-```text
-Audio file
-   |
-   +-- optional transcript
-   |
-   v
-Voxtral-Mini-3B
-   |
-   +-- zero-shot prompting
-   |
-   +-- LoRA / DoRA PEFT adapters
-   |
-   v
-Emotion label: Angry, Happy, Sad, or Neutral
-```
-
-The main experiment flow is:
-
-```text
-Zero-shot Voxtral
-        |
-        v
-Fine-tune PEFT adapters on ESD
-        |
-        v
-Evaluate on ESD
-        |
-        v
-Evaluate transfer to IEMOCAP
-        |
-        v
-Analyze audio-only vs audio-plus-transcript behavior
-```
-
-## Key Experiments
-
-| Experiment | Purpose |
-| --- | --- |
-| Zero-shot ESD | Measure Voxtral without fine-tuning on acted speech |
-| Zero-shot IEMOCAP | Measure Voxtral without fine-tuning on conversational speech |
-| LoRA fine-tuning on ESD | Adapt Voxtral efficiently with low-rank adapters |
-| DoRA fine-tuning on ESD | Compare weight-decomposed adapters against LoRA |
-| ESD adapter evaluation | Test in-domain fine-tuned performance |
-| IEMOCAP adapter evaluation | Test cross-domain generalization |
-| Audio vs audio + transcript | Measure whether text helps or hurts predictions |
-
-## Results Summary
-
-The paper reports that zero-shot Voxtral has limited balanced performance for
-this task, while PEFT adaptation improves results substantially.
-
-| Setting | Reported macro-F1 |
-| --- | ---: |
-| Zero-shot ESD | 0.13 |
-| Zero-shot IEMOCAP | 0.37 |
-| Best ESD fine-tuned result | 0.84 |
-| Best IEMOCAP cross-domain result | 0.63 |
-
-Macro-F1 is emphasized because it treats each emotion class equally, which is
-important when class difficulty and label distributions differ.
-
-## Repository Layout
+## Repository Structure
 
 ```text
 .
-+-- src/mer/              # Reusable project package
-+-- scripts/training/     # Fine-tuning entry points
-+-- scripts/evaluation/   # Zero-shot and adapter evaluation scripts
-+-- notebooks/            # Dataset exploration and analysis
-+-- tests/                # Lightweight tests for reusable helpers
-+-- docs/                 # Artifact notes and project documentation
-+-- results/              # Curated result summaries and figures
-+-- pyproject.toml
++-- data/            # dataset placeholders and local layout notes
++-- notebooks/       # exploration notebook
++-- results/         # result summaries and figures
++-- scripts/         # task-based training and evaluation entry points
++-- src/mer/         # reusable Python package
++-- tests/           # lightweight tests for package helpers
++-- pyproject.toml   # package metadata and mer CLI entry point
++-- requirements.txt # Python dependencies
 +-- README.md
 ```
 
-## Main Scripts
+Large local artifacts such as raw audio, checkpoints, logs, generated outputs,
+and vendor code are intentionally kept out of git.
 
-After installing the project, common workflows are available through the `mer`
-command:
+## Getting Started
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Install the Local Package Entry Point
+
+```bash
+python3 -m pip install -e .
+```
+
+This enables:
+
+```bash
+mer --help
+mer list
+```
+
+If editable install is blocked by your Python setup, use the package entry point
+directly from the repository root:
+
+```bash
+PYTHONPATH=src python3 -m mer.cli list
+```
+
+### 3. Prepare Local Artifacts
+
+Download or place the required artifacts locally:
+
+- ESD audio
+- IEMOCAP audio
+- metadata JSONL files
+- Voxtral base model or Hugging Face model ID
+- PEFT adapter folders for adapter evaluation
+
+## Quick Start
+
+List available workflows:
 
 ```bash
 mer list
+```
+
+Inspect the main commands:
+
+```bash
 mer zero-shot-esd --help
+mer zero-shot-iemocap --help
 mer train-lora-esd --help
+mer evaluate-esd --help
 mer evaluate-iemocap --help
 ```
 
-Zero-shot evaluation:
+## Script-Based Workflow
 
-```text
-scripts/evaluation/evaluate_zero_shot_esd.py
-scripts/evaluation/evaluate_zero_shot_iemocap.py
-```
-
-Training:
-
-```text
-scripts/training/train_voxtral_lora_esd.py
-```
-
-Adapter evaluation:
-
-```text
-scripts/evaluation/evaluate_esd_adapters.py
-scripts/evaluation/evaluate_esd_dora_transcript.py
-scripts/evaluation/evaluate_iemocap_adapters.py
-scripts/evaluation/evaluate_iemocap_dora_transcript.py
-```
-
-## Setup
-
-Install the project in editable mode:
+### Run Zero-Shot Baselines
 
 ```bash
-pip install -e .
+mer zero-shot-esd --help
+mer zero-shot-iemocap --help
 ```
 
-Then provide local paths to datasets, metadata, model artifacts, and output
-directories when running scripts.
+### Fine-Tune on ESD
 
+```bash
+mer train-lora-esd --help
+```
+
+### Evaluate Fine-Tuned Adapters
+
+```bash
+mer evaluate-esd --help
+mer evaluate-iemocap --help
+```
+
+### Evaluate DoRA Adapters
+
+```bash
+mer evaluate-esd-dora --help
+mer evaluate-iemocap-dora --help
+```
+
+The intended chained flow is:
+
+1. Run zero-shot baselines.
+2. Train or provide PEFT adapters.
+3. Evaluate adapters on ESD.
+4. Evaluate transfer to IEMOCAP.
+
+## Outputs
+
+Generated artifacts are organized under:
+
+- `checkpoints/`
+- `logs/`
+- `results/`
+
+## Notebook Workflow
+
+The public notebook is:
+
+```text
+notebooks/dataset_exploration.ipynb
+```
+
+It is used for dataset exploration, label checks, duration analysis, and visual
+inspection. Training and evaluation are handled by scripts and the `mer` CLI.
+
+## Results
+
+The paper reports that zero-shot Voxtral has limited balanced performance on
+speech emotion recognition, while PEFT adaptation improves results substantially.
+
+### ESD Dataset - In-domain
+
+
+| Setting | Reported macro-F1 | Delta |
+|---|---:|---:|
+| Zero-shot | 0.13 | — |
+| Fine-tuned | 0.84 | **+0.71** |
+
+### IEMOCAP Dataset - Cross-domain
+
+| Setting | Reported macro-F1 | Delta |
+|---|---:|---:|
+| Zero-shot | 0.37 | — |
+| Fine-tuned | 0.63 | **+0.26** |
+
+For the full written analysis, see:
+
+```text
+multimodal_speech_emotion_recognition_paper.pdf
+```
 
 ## Authors
 
-This project was developed by:
-
-- Amir Masoud Almasi
-- Ashkan Shafiei
-- Parastoo Alavi
-
-
+- **Amir Masoud Almasi** – amirmasoud.almasi@studenti.polito.it
+- **Ashkan Shafiei** – ashkan.shafiei@studenti.polito.it
+- **Parastoo Alavi** – parastoo.alavi@studenti.polito.it
 
 ## Notes
 
-This repository is for academic and portfolio purposes. Dataset licenses,
-external frameworks, and pretrained model licenses remain with their original owners.
+This repository is for academic purposes. Dataset licenses,
+external frameworks, and pretrained model licenses remain with their original
+owners.

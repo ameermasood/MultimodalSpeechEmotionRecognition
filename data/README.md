@@ -1,36 +1,12 @@
 # Data
 
-This folder documents the expected local dataset layout.
+This folder contains the expected datasets. Raw datasets are not committed to git. Download them separately according to their licenses and place them locally when running experiments.
 
-Raw datasets are not committed to git. They must be downloaded separately and
-placed locally according to each dataset license.
+## Folder Structure
 
-Tracked files in this folder are placeholders only.
+- **`raw/`**  
+  Local raw dataset copies. Expected subfolders:
+  - `ESD/`
+  - `IEMOCAP/`
 
-## Expected Layout
-
-```text
-data/
-+-- raw/
-|   +-- ESD/
-|   +-- IEMOCAP/
-```
-
-## Project Label Policy
-
-The public experiment setup uses four labels:
-
-```text
-Angry, Happy, Sad, Neutral
-```
-
-Dataset-specific rules:
-
-- ESD `Surprise` is excluded from the main paper-aligned setup.
-- IEMOCAP `excited` is mapped to `Happy`.
-
-## Notes
-
-- Do not commit raw audio files.
-- Do not commit generated dataset exports unless they are intentionally curated.
-- Scripts receive dataset and metadata paths through command-line arguments.
+The scripts accept explicit data and metadata paths, so the datasets can also live outside this repository.
