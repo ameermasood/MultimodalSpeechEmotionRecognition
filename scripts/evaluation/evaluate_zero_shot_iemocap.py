@@ -19,6 +19,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -114,7 +115,7 @@ def load_iemocap_test_df(meta_path: str, audio_root: str) -> pd.DataFrame:
     return df_mapped
 
 
-def resolve_iemocap_meta_path(meta_path: str | None, meta_dir: str | None, fold: int) -> str:
+def resolve_iemocap_meta_path(meta_path: Optional[str], meta_dir: Optional[str], fold: int) -> str:
     """Resolve either an explicit IEMOCAP JSON path or a fold JSON under a metadata root."""
     if meta_path:
         return meta_path

@@ -78,6 +78,13 @@ def run_script(script: str, args: Sequence[str]) -> None:
     try:
         sys.argv = [str(script_path), *args]
         runpy.run_path(str(script_path), run_name="__main__")
+    except ModuleNotFoundError as exc:
+        missing = exc.name or str(exc)
+        raise SystemExit(
+            f"Missing dependency while loading {script} ({missing}).\n"
+            "Install project dependencies with `pip install -r requirements.txt`, "
+            "preferably inside a virtual environment."
+        ) from exc
     finally:
         sys.argv = previous_argv
 
