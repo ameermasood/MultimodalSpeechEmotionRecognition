@@ -88,3 +88,8 @@ results/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+================================
+# Documentation
+================================
+AGENTS.md

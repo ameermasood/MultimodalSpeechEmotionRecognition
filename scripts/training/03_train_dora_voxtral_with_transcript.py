@@ -423,6 +423,9 @@ def main():
         val_l.extend(lst[:v])
         train_l.extend(lst[v:])
 
+    if not train_l:
+        raise RuntimeError("Train set became empty after carving validation. Reduce val_per_class.")
+
     # Balance Train
     tcnt = Counter([r["label"] for r in train_l])
     min_c = min(tcnt.values())
@@ -440,7 +443,7 @@ def main():
     # -------- Model & Transform --------
     proc = AutoProcessor.from_pretrained(args.model_id, trust_remote_code=True)
 
-    transform = VoxtralChatAudioTextGateTransform(
+    train_transform = VoxtralChatAudioTextGateTransform(
         proc,
         prompt_text=prompt_text,
         max_new_tokens=8,
@@ -450,8 +453,18 @@ def main():
         seed=args.seed,
         debug_once=True,
     )
-    train_ds.set_transform(transform)
-    val_ds.set_transform(transform)
+    val_transform = VoxtralChatAudioTextGateTransform(
+        proc,
+        prompt_text=prompt_text,
+        max_new_tokens=8,
+        text_drop_prob=0.0,
+        text_corrupt_prob=0.0,
+        transcript_pool=transcript_pool,
+        seed=args.seed,
+        debug_once=False,
+    )
+    train_ds.set_transform(train_transform)
+    val_ds.set_transform(val_transform)
 
     if args.load_in_4bit:
         bnb = BitsAndBytesConfig(
@@ -543,45 +556,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# Voxtral-Mini-3B DoRA Fine-Tuning with Stochastic Transcript Gating
-
-## Abstract
-This repository implements a specialized fine-tuning pipeline for the **Voxtral-mini-3b** multimodal model on the **ESD (Emotional Speech Dataset)**. It leverages **Weight-Decomposed Low-Rank Adaptation (DoRA)** for parameter efficiency and introduces a novel **Stochastic Transcript Gating** mechanism to train the model to robustly handle missing or unreliable textual context.
-
-## Key Innovations
-
-### 1. DoRA (Weight-Decomposed LoRA)
-
-Unlike standard LoRA, which adapts weights solely through low-rank matrices ($W' = W + \Delta W$), DoRA decomposes the pre-trained weight matrix into two components:
-* **Magnitude ($m$):** A scaling vector.
-* **Direction ($V$):** A normalized directional matrix.
-
-This decomposition ($W = m \frac{V}{||V||}$) allows DoRA to learn magnitude and direction updates separately, often resulting in higher learning capacity and stability closer to full fine-tuning.
-
-### 2. Stochastic Transcript Gating (Implicit MoE)
-
-We aim to train a model that acts as a "soft gate": relying on text when accurate, but falling back to audio prosody when text is missing or wrong. Instead of building an explicit Mixture-of-Experts (MoE) architecture, we induce this behavior via **Data Augmentation** during training:
-
-* **Modality Dropout ($P_{drop}=0.5$):** * *Mechanism:* Randomly strips the transcript from the input.
-    * *Effect:* Forces the model to maintain high performance using **Audio-Only** features.
-* **Modality Corruption ($P_{corrupt}=0.15$):** * *Mechanism:* Replaces the correct transcript with a random, mismatched transcript from the batch.
-    * *Effect:* Forces the model to detect dissonance between audio and text, learning to **ignore** the text modality when it contradicts the acoustic signal.
-
-## Methodology
-
-### Data Handling
-* **Source:** ESD Train Folds (JSONL).
-* **Transcript Parsing:** Automatically extracts transcripts from ESD speaker text files (`downloads/esd/<spk>/<spk>.txt`).
-* **Splitting:** Dynamically carves a stratified Validation set (e.g., 100 samples/class) from the training fold, ensuring no leakage from the Test fold.
-
-### Training Configuration
-| Hyperparameter | Value | Description |
-| :--- | :--- | :--- |
-| **Adapter Type** | DoRA | `use_dora=True` |
-| **Rank ($r$)** | 16 | Low-rank dimension |
-| **Alpha ($\alpha$)** | 32 | Scaling factor |
-| **Targets** | q, k, v, o | All linear attention projections |
-| **Text Drop** | 0.5 | 50% chance to see Audio-Only |
-| **Text Corrupt** | 0.15 | 15% chance to see Misleading Text |

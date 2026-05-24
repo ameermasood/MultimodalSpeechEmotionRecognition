@@ -798,7 +798,6 @@ def main():
     # Path Normalization
     args.meta_dir = to_abs(args.meta_dir)
     args.audio_root = to_abs(args.audio_root)
-    args.base_model = to_abs(args.base_model)
     args.out_root = to_abs(args.out_root)
     ensure_dir(args.out_root)
     if args.transcript_csv:
@@ -935,30 +934,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# IEMOCAP Multi-Adapter Evaluation Framework
-
-
-This module provides a rigorous evaluation pipeline for fine-tuned Voxtral adapters on the **IEMOCAP** dataset. It benchmarks models using both **Audio-Only** and **Multimodal (Audio+Text)** inference strategies to quantify the linguistic gain provided by transcripts.
-
-The pipeline includes robustness checks (duration binning, gender bias analysis), statistical significance testing (McNemar), and operational latency profiling.
-
-## Key Methodologies
-
-### 1. Multimodal Ablation
-The evaluation strategy runs every adapter in two modes:
-1.  **Audio-Only:** The model receives only the audio tensor.
-2.  **Audio + Text:** The model receives audio + ground truth transcript.
-
-This allows for the calculation of the **Modality Gain** (e.g., $\Delta F1_{text}$), revealing how much the model relies on linguistic cues versus acoustic prosody.
-
-### 2. Robustness Analysis
-To ensure the model isn't just overfitting to specific sample types, we compute:
-* **Duration Bins:** Accuracy broken down by audio length (e.g., <2s vs >6s). Short utterances are often harder to classify.
-* **Demographic Split:** Accuracy broken down by Gender (Male/Female) and Session ID.
-
-### 3. Statistical Significance
-* **McNemar's Test:** Used to compare:
-    * Adapter A vs. Adapter B (Is the performance gap real?)
-    * Audio vs. Audio+Text (Is the transcript actually helping?)
-* **Selective Risk:** An "Abstention" metric. It simulates a system that refuses to classify low-confidence samples. Lower Risk Area = Better Confidence Calibration.

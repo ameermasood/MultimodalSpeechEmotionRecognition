@@ -499,7 +499,9 @@ def main():
     ap.add_argument("--progress_every", type=int, default=200)
     args = ap.parse_args()
 
-    for k in ["meta_dir", "audio_root", "base_model", "out_root"]:
+    # Normalize filesystem paths. Keep base_model unchanged so it can be a
+    # Hugging Face model ID or a local path.
+    for k in ["meta_dir", "audio_root", "out_root"]:
         setattr(args, k, to_abs(getattr(args, k)))
 
     fold_root = os.path.join(args.out_root, f"fold_{args.fold}")
@@ -584,5 +586,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

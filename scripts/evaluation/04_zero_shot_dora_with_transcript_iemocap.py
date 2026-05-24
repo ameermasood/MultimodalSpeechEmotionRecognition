@@ -596,7 +596,6 @@ def main():
 
     args.meta_dir = to_abs(args.meta_dir)
     args.audio_root = to_abs(args.audio_root)
-    args.base_model = to_abs(args.base_model)
     args.out_root = to_abs(args.out_root)
     ensure_dir(args.out_root)
     if args.transcript_csv:
@@ -684,11 +683,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# IEMOCAP DoRA-Only Evaluation Framework
-
-##
-This specialized evaluation script allows researchers to benchmark **DoRA (Weight-Decomposed Low-Rank Adaptation)** models on the IEMOCAP dataset. It enforces a strict filter to ensure only DoRA-trained adapters are processed, preventing accidental contamination of results with standard LoRA models.
-
-The framework computes rigorous metrics including **Balanced Accuracy**, **Expected Calibration Error (ECE)**, and **Selective Risk**, assessing the model's reliability in both Audio-Only and Multimodal contexts.
-

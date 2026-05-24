@@ -585,8 +585,9 @@ def main():
     ap.add_argument("--progress_every", type=int, default=200)
     args = ap.parse_args()
 
-    # Normalize Paths
-    for k in ["meta_dir", "audio_root", "base_model", "out_root"]:
+    # Normalize filesystem paths. Keep base_model unchanged so it can be a
+    # Hugging Face model ID or a local path.
+    for k in ["meta_dir", "audio_root", "out_root"]:
         setattr(args, k, to_abs(getattr(args, k)))
     
     fold_root = os.path.join(args.out_root, f"fold_{args.fold}")
@@ -672,32 +673,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-# Voxtral-Mini-3B Multi-Adapter Evaluation Framework
-
-## Abstrac
-This module provides a comprehensive evaluation pipeline for Speech Emotion Recognition (SER) models fine-tuned on the **Voxtral-mini-3b** architecture. It is designed to test multiple PEFT adapters (LoRA/DoRA) against the ESD test sets, generating rigorous statistical and operational metrics.
-
-The framework supports multimodal ablation, allowing researchers to quantify the performance differential between **Audio-Only** inference and **Audio + Text** inference (using ground-truth transcripts).
-
-## Key Methodologies
-
-### 1. Robust Inference Strategy
-To mitigate role-validation constraints inherent in the base model's chat template, this script utilizes a **User-Only** prompt strategy. The model is prompted to complete the classification task ("Output only ONE label...") without an intervening "Assistant" role, ensuring compatibility with `mistral_common` validators.
-
-### 2. Advanced Metrics
-Beyond standard classification metrics (Accuracy, F1-Score, MCC), this framework computes:
-
-* **Expected Calibration Error (ECE):** Measures the reliability of the model's confidence scores. A lower ECE indicates that the model's predicted probabilities closely match its actual accuracy (essential for trustworthy AI).
-* **Selective Accuracy (Risk-Coverage):** Simulates a deployment scenario where the model abstains from prediction when confidence is below a threshold. The **Risk Area** metric quantifies the effectiveness of this abstention mechanism.
-* **Latency Profiling:** Records the 50th, 90th, and 99th percentile inference times (in milliseconds) to assess real-time suitability.
-
-### 3. Statistical Significance (McNemar's Test)
-The script automatically performs **McNemar's Test** (a paired non-parametric statistical test) in two contexts:
-1.  **Modality Comparison:** Audio-Only vs. Audio+Text (Is the linguistic addition statistically significant?)
-2.  **Adapter Comparison:** Adapter A vs. Adapter B (Is the new training run significantly better?)
-
-Results where $\chi^2 > 3.841$ indicate a statistically significant difference ($p < 0.05$).
