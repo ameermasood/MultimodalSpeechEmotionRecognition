@@ -34,9 +34,10 @@ Abstract:
 
 """
 
-import os, re, json, time, argparse, glob
+import os, json, time, argparse, sys
+from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-from collections import Counter, defaultdict
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -51,19 +52,33 @@ from peft import PeftModel
 
 from sklearn.metrics import (
     accuracy_score,
-    balanced_accuracy_score,
     confusion_matrix,
-    cohen_kappa_score,
-    matthews_corrcoef,
     classification_report,
     f1_score,
 )
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from mer.data import (
+    CANONICAL_EMOTION_SET,
+    CANONICAL_EMOTIONS,
+    infer_gender_from_utt,
+    infer_session_from_utt,
+    normalize_prediction_text,
+    resolve_iemocap_audio_path,
+)
+from mer.evaluation import classification_metrics, mcnemar_from_two_preds, selective_accuracy_curve
+from mer.inference import build_user_only_conversation
+from mer.modeling import adapter_tag_from_path, find_adapter_candidates
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # --- Emotion Taxonomy (Canonical) ---
-EMOS = ["Angry", "Happy", "Sad", "Neutral"]
-EMOSET = set(EMOS)
+EMOS = list(CANONICAL_EMOTIONS)
+EMOSET = set(CANONICAL_EMOTION_SET)
 
 # IEMOCAP raw label mapping (Excited -> Happy is standard practice)
 RAW2CANON = {
@@ -83,55 +98,6 @@ def to_abs(p: str) -> str:
 
 def ensure_dir(p: str):
     os.makedirs(p, exist_ok=True)
-
-def safe_name(s: str) -> str:
-    """Sanitizes directory names for safe filesystem operations."""
-    s = str(s)
-    s = re.sub(r"[^a-zA-Z0-9_\-\.]+", "_", s)
-    return s.strip("_")[:120] if s else "adapter"
-
-def infer_gender_from_utt(utt_id: str) -> str:
-    """Derives gender from IEMOCAP naming convention (e.g., Ses01F -> female)."""
-    if not isinstance(utt_id, str) or not utt_id:
-        return "unknown"
-    parts = utt_id.split("_")
-    if parts:
-        sess_code = parts[0]  # e.g. Ses01F
-        if sess_code.endswith("F"): return "female"
-        if sess_code.endswith("M"): return "male"
-    return "unknown"
-
-def infer_session_from_utt(utt_id: str) -> str:
-    """Extracts Session ID (e.g., Ses01) for cross-session validation checks."""
-    m = re.match(r"(Ses\d\d)", utt_id or "")
-    return m.group(1) if m else "Unknown"
-
-def normalize_label_from_text(txt: str) -> str:
-    """
-    Robust Parsing Strategy:
-    1. Checks the first token of the generation (most likely the label).
-    2. Falls back to keyword search if the first token is punctuation/noise.
-    3. Defaults to 'Neutral' if parsing fails.
-    """
-    if txt is None:
-        return "Neutral"
-    t = txt.strip().lower()
-    if not t:
-        return "Neutral"
-
-    first = re.split(r"[\s\.\,\!\?\:\;\-\(\)\[\]\{\}]+", t)[0]
-    m = {
-        "angry": "Angry", "anger": "Angry",
-        "happy": "Happy", "happiness": "Happy",
-        "sad": "Sad", "sadness": "Sad",
-        "neutral": "Neutral",
-    }
-    if first in m:
-        return m[first]
-    for k, v in m.items():
-        if re.search(rf"\b{k}\b", t):
-            return v
-    return "Neutral"
 
 # -------------------------
 # Audio Duration (Robustness Check)
@@ -166,22 +132,6 @@ def load_iemocap_fold_json(meta_dir: str, fold: int) -> Tuple[pd.DataFrame, str]
     df = pd.DataFrame.from_dict(d, orient="index").reset_index().rename(columns={"index": "key"})
     return df, p
 
-def resolve_audio_path(audio_root: str, wav_field: str) -> Optional[str]:
-    """Resolves relative paths robustly against audio root."""
-    if not wav_field:
-        return None
-    w = str(wav_field).replace("\\", "/")
-    if os.path.isabs(w) and os.path.isfile(w):
-        return w
-    c1 = os.path.join(audio_root, w)
-    if os.path.isfile(c1):
-        return c1
-    w2 = w.lstrip("/")
-    c2 = os.path.join(audio_root, w2)
-    if os.path.isfile(c2):
-        return c2
-    return None
-
 def load_transcripts(transcript_csv: str) -> pd.DataFrame:
     """Flexible CSV loader that handles various column naming conventions."""
     df = pd.read_csv(transcript_csv)
@@ -210,7 +160,7 @@ def build_dataset_df(
     """
     df_raw, json_path = load_iemocap_fold_json(meta_dir, fold)
 
-    df_raw["audio_path"] = df_raw["wav"].astype(str).apply(lambda x: resolve_audio_path(audio_root, x))
+    df_raw["audio_path"] = df_raw["wav"].astype(str).apply(lambda x: resolve_iemocap_audio_path(audio_root, x))
     df = df_raw[df_raw["audio_path"].apply(lambda p: isinstance(p, str) and os.path.exists(p))].copy()
 
     df["utt_id"] = df["wav"].apply(lambda p: os.path.splitext(os.path.basename(str(p)))[0])
@@ -287,45 +237,6 @@ def load_adapter_on_base(base, adapter_dir: str):
 # Inference Logic (Voxtral-Safe)
 # -------------------------
 
-def build_instruction(use_text: bool) -> str:
-    label_str = ", ".join(EMOS)
-    s = (
-        "You are an emotion classifier for speech.\n"
-        f"Possible emotions: {label_str}.\n"
-        "From the given audio"
-    )
-    if use_text:
-        s += " and its transcript"
-    s += (
-        ", classify the SPEAKER's emotion.\n"
-        f"Answer with EXACTLY one word from this set: {label_str}.\n"
-        "Do not add extra words."
-    )
-    return s
-
-def build_conversation_voxtral(audio_path: str, instruction: str, transcript: str, use_text: bool):
-    """
-    Constructs a 'User-Only' prompt structure.
-    Avoids 'assistant' role to prevent mistral_common validation errors.
-    """
-    wav_path = os.path.abspath(audio_path)
-    if not os.path.isfile(wav_path):
-        raise FileNotFoundError(f"Missing audio file: {wav_path}")
-
-    audio_part = {
-        "type": "audio",
-        "audio_url": {"url": wav_path},
-        "content": wav_path,
-        "path": wav_path,
-        "url": wav_path,
-    }
-
-    content = [audio_part, {"type": "text", "text": instruction}]
-    if use_text and transcript and transcript.strip():
-        content.append({"type": "text", "text": f"Transcript:\n{transcript.strip()}"})
-
-    return [{"role": "user", "content": content}]
-
 @torch.no_grad()
 def predict_one(
     processor, model, device,
@@ -337,8 +248,14 @@ def predict_one(
     temperature: float,
     top_p: float
 ):
-    instruction = build_instruction(use_text)
-    conversation = build_conversation_voxtral(audio_path, instruction, transcript, use_text)
+    if not os.path.isfile(os.path.abspath(audio_path)):
+        raise FileNotFoundError(f"Missing audio file: {os.path.abspath(audio_path)}")
+    conversation = build_user_only_conversation(
+        audio_path=audio_path,
+        transcript=transcript,
+        use_text=use_text,
+        labels=EMOS,
+    )
 
     inputs = processor.apply_chat_template(conversation, tokenize=True, return_tensors="pt")
     inputs = {k: v.to(device) for k, v in inputs.items() if torch.is_tensor(v)}
@@ -359,7 +276,7 @@ def predict_one(
     in_len = int(inputs["input_ids"].shape[1])
     seq = out.sequences
     decoded = processor.batch_decode(seq[:, in_len:], skip_special_tokens=True)[0]
-    pred = normalize_label_from_text(decoded)
+    pred = normalize_prediction_text(decoded)
 
     # Confidence: Softmax probability of the FIRST generated token
     # (Proxy for model certainty)
@@ -452,124 +369,16 @@ def plot_selective_curve(cover, acc, out_png: str, title: str):
     plt.close()
 
 # -------------------------
-# Calibration / ECE / Selective Risk
-# -------------------------
-
-def reliability_ece(conf: np.ndarray, correct: np.ndarray, n_bins: int = 10):
-    """Computes Expected Calibration Error (ECE) to measure confidence reliability."""
-    conf = np.asarray(conf, dtype=np.float64)
-    correct = np.asarray(correct, dtype=np.float64)
-    m = np.isfinite(conf)
-    conf = conf[m]
-    correct = correct[m]
-    if len(conf) == 0:
-        return float("nan"), np.zeros(n_bins), np.zeros(n_bins), np.zeros(n_bins)
-
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    ids = np.digitize(conf, bins) - 1
-    ids = np.clip(ids, 0, n_bins - 1)
-
-    bin_acc = np.zeros(n_bins)
-    bin_conf = np.zeros(n_bins)
-    bin_cnt = np.zeros(n_bins)
-
-    for b in range(n_bins):
-        mb = (ids == b)
-        if mb.sum() > 0:
-            bin_acc[b] = correct[mb].mean()
-            bin_conf[b] = conf[mb].mean()
-            bin_cnt[b] = mb.sum()
-
-    N = max(1, len(conf))
-    ece = float(np.sum((bin_cnt / N) * np.abs(bin_acc - bin_conf)))
-    return ece, bin_acc, bin_conf, bin_cnt
-
-def selective_accuracy_curve(conf: np.ndarray, correct: np.ndarray, n_points: int = 20):
-    """Computes Risk-Coverage curve for Selective Prediction (abstention)."""
-    conf = np.asarray(conf, dtype=np.float64)
-    correct = np.asarray(correct, dtype=np.float64)
-    m = np.isfinite(conf)
-    conf = conf[m]
-    correct = correct[m]
-    if len(conf) == 0:
-        return [], [], float("nan")
-
-    order = np.argsort(-conf)
-    correct_sorted = correct[order]
-
-    coverages = np.linspace(0.1, 1.0, n_points)
-    cov_list, acc_list = [], []
-    for c in coverages:
-        k = max(1, int(round(c * len(correct_sorted))))
-        acc = float(correct_sorted[:k].mean())
-        cov_list.append(float(k / len(correct_sorted)))
-        acc_list.append(acc)
-
-    risk = np.trapz([1.0 - a for a in acc_list], x=cov_list)
-    return cov_list, acc_list, float(risk)
-
-# -------------------------
-# Statistics: McNemar Test
-# -------------------------
-
-def mcnemar_from_two_preds(y_true: np.ndarray, y_pred_a: np.ndarray, y_pred_b: np.ndarray) -> Dict:
-    """Calculates McNemar's Chi-Squared statistic for paired nominal data."""
-    y_true = np.asarray(y_true)
-    a = (np.asarray(y_pred_a) == y_true)
-    b = (np.asarray(y_pred_b) == y_true)
-
-    n01 = int((~a & b).sum())
-    n10 = int((a & ~b).sum())
-    denom = n01 + n10
-    stat = float(((abs(n01 - n10) - 1)**2) / denom) if denom > 0 else 0.0
-
-    return {
-        "n01_a_wrong_b_right": n01,
-        "n10_a_right_b_wrong": n10,
-        "total_divergent": int(denom),
-        "chi_sq_stat": float(stat),
-        "significant_p05": bool(stat > 3.841),
-    }
-
-# -------------------------
 # Metrics & Reporting
 # -------------------------
 
 def compute_metrics(df: pd.DataFrame) -> Dict:
-    y_true = df["true"].tolist()
-    y_pred = df["pred"].tolist()
-
-    out = {
-        "num_samples": int(len(df)),
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "balanced_acc": float(balanced_accuracy_score(y_true, y_pred)),
-        "macro_f1": float(f1_score(y_true, y_pred, average="macro")),
-        "weighted_f1": float(f1_score(y_true, y_pred, average="weighted")),
-        "kappa": float(cohen_kappa_score(y_true, y_pred)),
-        "mcc": float(matthews_corrcoef(y_true, y_pred)),
-        "true_counts": dict(Counter(y_true)),
-        "pred_counts": dict(Counter(y_pred)),
-    }
-
-    # Latency Stats
-    lat = df["latency_ms"].to_numpy(dtype=float)
-    lat = lat[np.isfinite(lat)]
-    if len(lat) > 0:
-        out["latency_ms_p50"] = float(np.percentile(lat, 50))
-        out["latency_ms_p90"] = float(np.percentile(lat, 90))
-        out["latency_ms_p99"] = float(np.percentile(lat, 99))
-        out["latency_ms_mean"] = float(np.mean(lat))
-
-    # ECE & Selective Risk
-    if "confidence_first_token" in df.columns:
-        conf = df["confidence_first_token"].to_numpy(dtype=float)
-        correct = (df["true"] == df["pred"]).to_numpy(dtype=float)
-        ece, _, _, _ = reliability_ece(conf, correct)
-        out["ece_10bins"] = float(ece) if np.isfinite(ece) else float("nan")
-        cover, acc, risk = selective_accuracy_curve(conf, correct)
-        out["selective_risk_area"] = float(risk) if np.isfinite(risk) else float("nan")
-
-    return out
+    return classification_metrics(
+        df["true"].tolist(),
+        df["pred"].tolist(),
+        confidence=df["confidence_first_token"].to_numpy(dtype=float) if "confidence_first_token" in df.columns else None,
+        latencies_ms=df["latency_ms"].to_numpy(dtype=float) if "latency_ms" in df.columns else None,
+    )
 
 def save_classification_report(df: pd.DataFrame, out_csv: str):
     rep = classification_report(df["true"], df["pred"], labels=EMOS, output_dict=True, zero_division=0)
@@ -613,39 +422,6 @@ def plot_duration_accuracy(g: pd.DataFrame, out_png: str, title: str):
     plt.tight_layout()
     plt.savefig(out_png, dpi=220)
     plt.close()
-
-# -------------------------
-# Adapter Discovery
-# -------------------------
-
-def find_adapters(adapters_root: str) -> List[str]:
-    """Scans directory for valid adapter configurations."""
-    adapters_root = to_abs(adapters_root)
-    if not os.path.isdir(adapters_root):
-        return []
-    candidates = []
-    for sub in sorted(glob.glob(os.path.join(adapters_root, "*"))):
-        if not os.path.isdir(sub): continue
-        fa = os.path.join(sub, "final_adapter")
-        if os.path.isdir(fa):
-            candidates.append(fa)
-        else:
-            candidates.append(sub)
-    good = []
-    for d in candidates:
-        if not os.path.isdir(d): continue
-        has_cfg = os.path.isfile(os.path.join(d, "adapter_config.json"))
-        has_w = any(os.path.isfile(os.path.join(d, x)) for x in ["adapter_model.safetensors", "adapter_model.bin"])
-        if has_cfg or has_w:
-            good.append(d)
-    seen = set()
-    out = []
-    for g in good:
-        g = os.path.abspath(g)
-        if g not in seen:
-            seen.add(g)
-            out.append(g)
-    return out
 
 # -------------------------
 # Execution Logic
@@ -821,7 +597,7 @@ def main():
     # 3. Discover Adapters
     adapter_dirs = []
     if args.adapters_root:
-        adapter_dirs.extend(find_adapters(args.adapters_root))
+        adapter_dirs.extend(find_adapter_candidates(args.adapters_root))
     if args.adapters:
         adapter_dirs.extend([to_abs(a) for a in args.adapters])
     
@@ -838,7 +614,7 @@ def main():
     if args.include_base_zero_shot:
         entries.append(("ZERO_SHOT_BASE", None))
     for ad in adapter_dirs:
-        entries.append((safe_name(os.path.basename(os.path.dirname(ad)) if os.path.basename(ad)=="final_adapter" else os.path.basename(ad)), ad))
+        entries.append((adapter_tag_from_path(ad), ad))
 
     if len(entries) == 0:
         raise RuntimeError("No adapters found.")
