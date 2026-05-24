@@ -5,10 +5,6 @@ audio-language model. It compares zero-shot inference with parameter-efficient
 fine-tuning, studies audio-only versus audio-plus-transcript inputs, and tests
 whether models trained on acted speech generalize to conversational speech.
 
-The project was originally developed for the Applied Data Science Project course
-at Politecnico di Torino and has been organized into a reproducible Python
-package with runnable training and evaluation scripts.
-
 ## What It Does
 
 Given a speech recording, the system predicts one of four emotion labels:
@@ -35,10 +31,6 @@ strong emotion recognizers out of the box. This project investigates:
 - Whether transcripts help or interfere with emotion recognition
 - How well an ESD-trained model transfers to IEMOCAP
 
-This makes the project useful as both a machine learning experiment and a
-portfolio project: it includes model adaptation, multimodal inference,
-cross-dataset evaluation, and a path toward deployment.
-
 ## Datasets
 
 The experiments use two speech emotion datasets:
@@ -46,14 +38,6 @@ The experiments use two speech emotion datasets:
 - **ESD**, the Emotional Speech Dataset, used for fine-tuning and in-domain
   evaluation.
 - **IEMOCAP**, used for cross-domain evaluation on conversational speech.
-
-The main label setup follows the paper-aligned four-class task:
-
-- ESD `Surprise` is excluded.
-- IEMOCAP `excited` is mapped to `Happy`.
-
-Raw audio and large dataset artifacts are not included in this repository.
-They must be downloaded separately according to each dataset's license.
 
 ## Method Overview
 
@@ -133,13 +117,6 @@ important when class difficulty and label distributions differ.
 +-- README.md
 ```
 
-`src/mer` contains the reusable code for data handling, prompts, inference,
-model loading, training utilities, metrics, and visualizations. Scripts are kept
-as command-line entry points around that package.
-
-`src/EmoBox` is treated as external/vendor code and is not tracked as part of
-the cleaned project source.
-
 ## Main Scripts
 
 After installing the project, common workflows are available through the `mer`
@@ -174,8 +151,6 @@ scripts/evaluation/evaluate_iemocap_adapters.py
 scripts/evaluation/evaluate_iemocap_dora_transcript.py
 ```
 
-See the README files under `scripts/` for script-specific usage.
-
 ## Setup
 
 Install the project in editable mode:
@@ -187,54 +162,18 @@ pip install -e .
 Then provide local paths to datasets, metadata, model artifacts, and output
 directories when running scripts.
 
-Large model and audio dependencies depend on your machine and GPU environment.
-Training and full evaluation are expected to require a suitable CUDA setup.
-
-## Required External Artifacts
-
-This repository does not include large files such as datasets, model weights,
-or generated checkpoints. A full run expects:
-
-- Raw ESD audio
-- Raw IEMOCAP audio
-- Metadata JSONL files for dataset splits
-- Voxtral base model, usually from Hugging Face
-- Fine-tuned PEFT adapter folders for adapter evaluation
-- Output folders for metrics, predictions, plots, logs, and checkpoints
-
-See `docs/artifacts.md` for a more detailed artifact checklist.
-
-## Future Demo
-
-After the training and evaluation workflow is stable, the project can be turned
-into a small inference demo. The demo should accept an audio file, optionally
-accept a transcript, load the selected Voxtral adapter, and return the predicted
-emotion with basic metadata.
-
-This demo is intentionally planned as a later deployment step, after the core
-research pipeline is documented and reproducible.
-
-## Limitations
-
-- Emotion labels are subjective and sometimes ambiguous.
-- ESD is acted speech, while IEMOCAP is conversational speech.
-- Transcripts may help in some cases but conflict with vocal tone in others.
-- Cross-domain generalization remains difficult.
-- Large audio-language models require significant compute.
 
 ## Authors
 
 This project was developed by:
 
 - Amir Masoud Almasi
-- Parastoo Alavi
 - Ashkan Shafiei
+- Parastoo Alavi
 
-Course context: Applied Data Science Project, Politecnico di Torino.
+
 
 ## Notes
 
 This repository is for academic and portfolio purposes. Dataset licenses,
-external frameworks, and pretrained model licenses remain with their original
-owners. Raw datasets, generated checkpoints, and large model artifacts should
-not be committed to git.
+external frameworks, and pretrained model licenses remain with their original owners.
