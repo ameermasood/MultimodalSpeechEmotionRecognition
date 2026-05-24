@@ -96,7 +96,9 @@ Thumbs.db
 # ================================
 figures/
 plots/
-results/
+results/*
+!results/README.md
+gantt.png
 
 # ================================
 # LaTeX build artifacts (if paper included)

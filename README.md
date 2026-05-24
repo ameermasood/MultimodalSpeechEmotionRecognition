@@ -1,4 +1,4 @@
-# Multimodal Speech Emotion Recognition with Voxtral
+# Multimodal Speech Emotion Recognition via Parameter-Efficient Fine-Tuning of Audio-Language Models
 
 This project explores speech emotion recognition with Voxtral-Mini-3B, a large
 audio-language model. It compares zero-shot inference with parameter-efficient
@@ -112,6 +112,7 @@ important when class difficulty and label distributions differ.
 +-- notebooks/            # Dataset exploration and analysis
 +-- tests/                # Lightweight tests for reusable helpers
 +-- docs/                 # Artifact notes and project documentation
++-- results/              # Curated result summaries and figures
 +-- pyproject.toml
 +-- README.md
 ```

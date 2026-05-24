@@ -1,8 +1,18 @@
-This folder is reserved for the original datasets:
+# Raw Data
 
-- ESD (Emotional Speech Dataset)
+This folder is reserved for local raw dataset copies.
 
-- IEMOCAP (Interactive Emotional Dyadic Motion Capture)
+Expected local folders:
 
-The datasets must be downloaded separately from their official sources and placed
-inside these folders following their standard directory structure. No raw audio files are uploaded to GitHub.
+```text
+data/raw/
++-- ESD/
++-- IEMOCAP/
+```
+
+The actual datasets are not included in this repository because of licensing and
+file size constraints.
+
+Use the original dataset directory structures where possible. The training and
+evaluation scripts accept explicit paths, so the exact local location can also
+be outside this repository.
