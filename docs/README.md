@@ -1,12 +1,9 @@
 # Documents
 
-This folder contains supporting project material and reproducibility notes.
+This folder contains written project material and lightweight documentation
+assets.
 
-Typical contents include:
+## Contents
 
-- the final project paper
-- artifact and environment notes
-- lightweight documentation assets
-
-Large artifacts such as model weights, logs, raw outputs, and raw datasets
-should remain outside this folder and outside git.
+- **`multimodal_speech_emotion_recognition_paper.pdf`**  
+  Final written project paper.
