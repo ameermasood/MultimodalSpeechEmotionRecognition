@@ -1,0 +1,3 @@
+# Keep exploration notebooks visible in the repository but out of GitHub
+# language statistics.
+notebooks/*.ipynb linguist-vendored
