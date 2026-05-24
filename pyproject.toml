@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multimodal-speech-emotion-recognition"
+version = "0.1.0"
+description = "Multimodal speech emotion recognition with Voxtral and parameter-efficient fine-tuning."
+readme = "README.md"
+requires-python = ">=3.9"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mer*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
