@@ -18,6 +18,7 @@ ENV/
 # ================================
 .ipynb_checkpoints/
 *.ipynb
+!notebooks/dataset_exploration.ipynb
 
 # ================================
 # PyTorch / Model artifacts

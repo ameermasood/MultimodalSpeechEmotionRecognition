@@ -112,7 +112,6 @@ important when class difficulty and label distributions differ.
 +-- notebooks/            # Dataset exploration and analysis
 +-- tests/                # Lightweight tests for reusable helpers
 +-- docs/                 # Artifact notes and project documentation
-+-- results/              # Generated metrics, plots, and reports
 +-- pyproject.toml
 +-- README.md
 ```
