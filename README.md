@@ -23,21 +23,12 @@ The model outputs one label from the four-class emotion set:
 Angry, Happy, Sad, Neutral
 ```
 
-## Model Setup
-
-The project compares zero-shot Voxtral against PEFT-adapted Voxtral.
-
-| Setting | Input | Adaptation | Output |
-|---|---|---|---|
-| Zero-shot | Audio or audio + transcript | None | Emotion label |
-| LoRA | Audio or audio + transcript | Low-rank PEFT adapter | Emotion label |
-| DoRA | Audio or audio + transcript | Weight-decomposed PEFT adapter | Emotion label |
-
 ## Repository Structure
 
 ```text
 .
 +-- data/            # dataset placeholders and local layout notes
++-- docs/            # paper and lightweight documentation assets
 +-- notebooks/       # exploration notebook
 +-- results/         # result summaries and figures
 +-- scripts/         # task-based training and evaluation entry points
@@ -76,6 +67,7 @@ If editable install is blocked by your Python setup, use the package entry point
 directly from the repository root:
 
 ```bash
+PYTHONPATH=src python3 -m mer.cli --help
 PYTHONPATH=src python3 -m mer.cli list
 ```
 
@@ -151,6 +143,9 @@ Generated artifacts are organized under:
 - `logs/`
 - `results/`
 
+Only curated summaries and figures should be committed under `results/`; raw
+logs, checkpoints, large prediction files, and model weights should stay local.
+
 ## Notebook Workflow
 
 The public notebook is:
@@ -172,14 +167,14 @@ speech emotion recognition, while PEFT adaptation improves results substantially
 
 | Setting | Reported macro-F1 | Delta |
 |---|---:|---:|
-| Zero-shot | 0.13 | — |
+| Zero-shot | 0.13 | n/a |
 | Fine-tuned | 0.84 | **+0.71** |
 
 ### IEMOCAP Dataset - Cross-domain
 
 | Setting | Reported macro-F1 | Delta |
 |---|---:|---:|
-| Zero-shot | 0.37 | — |
+| Zero-shot | 0.37 | n/a |
 | Fine-tuned | 0.63 | **+0.26** |
 
 For the full written analysis, see:
@@ -190,9 +185,13 @@ docs/multimodal_speech_emotion_recognition_paper.pdf
 
 ## Authors
 
-- **Amir Masoud Almasi** – amirmasoud.almasi@studenti.polito.it
-- **Ashkan Shafiei** – ashkan.shafiei@studenti.polito.it
-- **Parastoo Alavi** – parastoo.alavi@studenti.polito.it
+This project was developed as part of the course Applied Data Science Project (ADSP) at Politecnico di Torino by:
+
+| Author | Contact |
+|---|---|
+| Amir Masoud Almasi | amirmasoud.almasi@studenti.polito.it |
+| Ashkan Shafiei | ashkan.shafiei@studenti.polito.it |
+| Parastoo Alavi | parastoo.alavi@studenti.polito.it |
 
 ## Notes
 
