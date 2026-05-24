@@ -3,9 +3,9 @@
 
 
 
-import os, re, json, time, argparse, glob
-from collections import Counter
-from typing import Optional, List, Dict, Tuple
+import os, json, time, argparse, sys
+from pathlib import Path
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -18,22 +18,30 @@ import matplotlib.pyplot as plt
 from transformers import AutoProcessor, VoxtralForConditionalGeneration, BitsAndBytesConfig
 from peft import PeftModel
 
-# 1. FIXED IMPORT: Added balanced_accuracy_score
-from sklearn.metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    confusion_matrix,
-    matthews_corrcoef,
-    cohen_kappa_score,
-    classification_report,
+from sklearn.metrics import confusion_matrix
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from mer.data import (
+    CANONICAL_EMOTION_SET,
+    CANONICAL_EMOTIONS,
+    normalize_emotion_name,
+    normalize_prediction_text,
+    read_esd_transcript,
+    resolve_esd_wav_path,
+    speaker_id_from_esd_path,
+    utterance_id_from_esd_path,
 )
+from mer.evaluation import classification_metrics, mcnemar_from_two_preds, selective_accuracy_curve
+from mer.modeling import adapter_tag_from_path, discover_adapters, is_dora_adapter, resolve_adapter_dir
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-EMOS = ["Angry", "Happy", "Sad", "Neutral"]
-KEEP = set(EMOS)
-EMOS_LOWER = set([e.lower() for e in EMOS])
+EMOS = list(CANONICAL_EMOTIONS)
+KEEP = set(CANONICAL_EMOTION_SET)
 
 # -------------------------
 # Utils
@@ -43,121 +51,6 @@ def to_abs(p: str) -> str:
 
 def ensure_dir(p: str):
     os.makedirs(p, exist_ok=True)
-
-def norm_emo(e: str) -> str:
-    return (e or "").strip().capitalize()
-
-def resolve_wav_path(audio_root: str, wav_field: str) -> Optional[str]:
-    wav_field = (wav_field or "").replace("\\", "/")
-    if not wav_field:
-        return None
-    if os.path.isabs(wav_field) and os.path.isfile(wav_field):
-        return wav_field
-    c1 = os.path.join(audio_root, wav_field)
-    if os.path.isfile(c1):
-        return c1
-    parent = os.path.dirname(audio_root.rstrip("/"))
-    c2 = os.path.join(parent, wav_field)
-    if os.path.isfile(c2):
-        return c2
-    return None
-
-def speaker_id_from_esd_rel(wav_rel_or_abs: str) -> str:
-    s = (wav_rel_or_abs or "").replace("\\", "/")
-    m = re.search(r"downloads/esd/(\d{4})/", s)
-    if m:
-        return m.group(1)
-    base = os.path.basename(s)
-    m2 = re.match(r"^(\d{4})_", base)
-    return m2.group(1) if m2 else "Unknown"
-
-def utt_id_from_path(wav_path: str) -> Optional[str]:
-    base = os.path.basename(wav_path)
-    m = re.match(r"(\d{4}_\d{6})\.wav$", base)
-    return m.group(1) if m else None
-
-def extract_label_from_text(txt: str) -> Optional[str]:
-    if txt is None:
-        return "Neutral"
-    t = txt.strip().lower().replace("\n", " ").replace("\t", " ")
-    if not t:
-        return "Neutral"
-    for emo in EMOS:
-        if re.search(rf"\b{emo.lower()}\b", t):
-            return emo
-    best, best_pos = "Neutral", 10**9
-    for emo in EMOS:
-        p = t.find(emo.lower())
-        if p != -1 and p < best_pos:
-            best, best_pos = emo, p
-    return best if best_pos < 10**9 else "Neutral"
-
-def safe_tag_from_path(p: str) -> str:
-    p = os.path.normpath(p)
-    if os.path.basename(p) == "final_adapter":
-        return os.path.basename(os.path.dirname(p))
-    return os.path.basename(p)
-
-# -------------------------
-# 2. FIXED: DoRA-only filter
-# -------------------------
-def is_dora_adapter(adapter_dir: str) -> bool:
-    """Checks adapter_config.json for use_dora=True."""
-    cfg = os.path.join(adapter_dir, "adapter_config.json")
-    if not os.path.isfile(cfg):
-        return False
-    try:
-        with open(cfg, "r") as f:
-            d = json.load(f)
-        return bool(d.get("use_dora", False))
-    except Exception:
-        return False
-
-# -------------------------
-# Transcript resolver (ESD)
-# -------------------------
-def read_esd_transcript(audio_root: str, wav_abs: str) -> Optional[str]:
-    spk = speaker_id_from_esd_rel(wav_abs)
-    utt = utt_id_from_path(wav_abs)
-    if not spk or not utt:
-        return None
-
-    paths_to_try = [
-        os.path.join(audio_root, "downloads", "esd", spk, f"{spk}.txt"),
-        os.path.join(os.path.dirname(audio_root.rstrip("/")), "downloads", "esd", spk, f"{spk}.txt"),
-        os.path.join(audio_root, spk, f"{spk}.txt"),
-    ]
-
-    txt_path = None
-    for p in paths_to_try:
-        if os.path.isfile(p):
-            txt_path = p
-            break
-    if not txt_path:
-        return None
-
-    utt_re = re.compile(rf"^{re.escape(utt)}\b")
-    try:
-        with open(txt_path, "r", encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                if not utt_re.match(line):
-                    continue
-                parts = line.split()
-                if len(parts) < 2:
-                    return None
-                last = parts[-1].strip().lower()
-                if last in EMOS_LOWER and len(parts) >= 3:
-                    content_parts = parts[1:-1]
-                else:
-                    content_parts = parts[1:]
-                mid = " ".join(content_parts).strip()
-                return mid if mid else None
-    except Exception:
-        return None
-    return None
 
 # -------------------------
 # Load ESD test fold rows
@@ -172,21 +65,21 @@ def load_esd_test_rows(meta_dir: str, audio_root: str, fold: int) -> Tuple[str, 
                 continue
             ex = json.loads(line)
 
-            emo = norm_emo(ex.get("emo", ex.get("label", "")))
+            emo = normalize_emotion_name(ex.get("emo", ex.get("label", "")))
             if emo not in KEEP:
                 continue
 
             wav_rel = (ex.get("wav", "") or "").replace("\\", "/")
-            wav_abs = resolve_wav_path(audio_root, wav_rel)
+            wav_abs = resolve_esd_wav_path(audio_root, wav_rel)
             if not wav_abs:
                 missing += 1
                 continue
 
             length = ex.get("length", None)
-            spk = speaker_id_from_esd_rel(wav_rel)
+            spk = speaker_id_from_esd_path(wav_rel) or "Unknown"
 
             rows.append({
-                "utt_id": utt_id_from_path(wav_abs),
+                "utt_id": utterance_id_from_esd_path(wav_abs),
                 "wav": wav_abs,
                 "label": emo,
                 "length_sec": float(length) if length is not None else float("nan"),
@@ -194,30 +87,6 @@ def load_esd_test_rows(meta_dir: str, audio_root: str, fold: int) -> Tuple[str, 
             })
 
     return jsonl, rows, missing
-
-# -------------------------
-# Adapter discovery
-# -------------------------
-def resolve_adapter_dir(p: str) -> Optional[str]:
-    p = to_abs(p)
-    if os.path.isfile(os.path.join(p, "adapter_config.json")):
-        return p
-    fa = os.path.join(p, "final_adapter")
-    if os.path.isfile(os.path.join(fa, "adapter_config.json")):
-        return fa
-    return None
-
-def discover_adapters(adapters_root: str) -> List[str]:
-    adapters_root = to_abs(adapters_root)
-    out = []
-    for d in sorted(glob.glob(os.path.join(adapters_root, "*"))):
-        if not os.path.isdir(d):
-            continue
-        rd = resolve_adapter_dir(d)
-        if rd is not None:
-            out.append(rd)
-    return out
-
 # -------------------------
 # Model loading
 # -------------------------
@@ -289,7 +158,7 @@ def infer_one(processor, model, device, wav_path, prompt_text, max_new_tokens=8,
     new_tokens = seq[:, in_len:]
     txt = processor.batch_decode(new_tokens, skip_special_tokens=True)[0]
 
-    pred = extract_label_from_text(txt)
+    pred = normalize_prediction_text(txt)
     conf = float("nan")
     try:
         if gen_out.scores and len(gen_out.scores) > 0:
@@ -328,80 +197,8 @@ def plot_confusion(mat, labels, out_png, title, normalize=False):
     plt.savefig(out_png, dpi=220)
     plt.close()
 
-def reliability_ece(conf: np.ndarray, correct: np.ndarray, n_bins: int = 10):
-    conf = np.asarray(conf, dtype=np.float64)
-    correct = np.asarray(correct, dtype=np.float64)
-    m = np.isfinite(conf)
-    conf, correct = conf[m], correct[m]
-    if len(conf) == 0:
-        return float("nan")
-    bins = np.linspace(0.0, 1.0, n_bins + 1)
-    ids = np.digitize(conf, bins) - 1
-    ids = np.clip(ids, 0, n_bins - 1)
-    ece = 0.0
-    N = max(1, len(conf))
-    for b in range(n_bins):
-        mb = (ids == b)
-        if mb.sum() > 0:
-            acc = correct[mb].mean()
-            cbar = conf[mb].mean()
-            ece += (mb.sum() / N) * abs(acc - cbar)
-    return float(ece)
-
-def selective_accuracy_curve(conf: np.ndarray, correct: np.ndarray, n_points: int = 20):
-    conf = np.asarray(conf, dtype=np.float64)
-    correct = np.asarray(correct, dtype=np.float64)
-    m = np.isfinite(conf)
-    conf, correct = conf[m], correct[m]
-    if len(conf) == 0:
-        return [], [], float("nan")
-    order = np.argsort(-conf)
-    correct_sorted = correct[order]
-    coverages = np.linspace(0.1, 1.0, n_points)
-    cov_list, acc_list = [], []
-    for c in coverages:
-        k = max(1, int(round(c * len(correct_sorted))))
-        acc = float(correct_sorted[:k].mean())
-        cov_list.append(float(k / len(correct_sorted)))
-        acc_list.append(acc)
-    risk = np.trapz([1.0 - a for a in acc_list], x=cov_list)
-    return cov_list, acc_list, float(risk)
-
 def compute_metrics_extended(y_true, y_pred, conf, latencies):
-    out = {
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
-        "f1_macro": float(f1_score(y_true, y_pred, average="macro")),
-        "f1_weighted": float(f1_score(y_true, y_pred, average="weighted")),
-        "mcc": float(matthews_corrcoef(y_true, y_pred)),
-        "kappa": float(cohen_kappa_score(y_true, y_pred)),
-        "num_samples": int(len(y_true)),
-    }
-    lat = np.array(latencies, dtype=float)
-    lat = lat[np.isfinite(lat)]
-    if len(lat) > 0:
-        out["latency_ms_p50"] = float(np.percentile(lat, 50))
-        out["latency_ms_p90"] = float(np.percentile(lat, 90))
-        out["latency_ms_p99"] = float(np.percentile(lat, 99))
-    correct = (np.array(y_true) == np.array(y_pred)).astype(float)
-    out["ece_10bins"] = reliability_ece(np.array(conf, dtype=float), correct)
-    _, _, risk = selective_accuracy_curve(np.array(conf, dtype=float), correct)
-    out["selective_risk_area"] = float(risk) if np.isfinite(risk) else float("nan")
-    return out
-
-def mcnemar_from_two_preds(y_true, y_pred_a, y_pred_b):
-    y_true = np.asarray(y_true)
-    a = (np.asarray(y_pred_a) == y_true)
-    b = (np.asarray(y_pred_b) == y_true)
-    n01 = int((~a & b).sum())
-    n10 = int((a & ~b).sum())
-    denom = n01 + n10
-    stat = ((abs(n01 - n10) - 1) ** 2) / denom if denom > 0 else 0.0
-    return {
-        "n01_a_wrong_b_right": n01, "n10_a_right_b_wrong": n10,
-        "total_divergent": denom, "chi_sq_stat": float(stat),
-        "significant_p05": bool(stat > 3.841)
-    }
+    return classification_metrics(y_true, y_pred, confidence=conf, latencies_ms=latencies)
 
 # -------------------------
 # Run modes
@@ -534,7 +331,7 @@ def main():
     per_adapter_dfs = {}
 
     for idx, adapter_dir in enumerate(adapter_list, 1):
-        tag = safe_tag_from_path(adapter_dir)
+        tag = adapter_tag_from_path(adapter_dir)
         print(f"\n[{idx}/{len(adapter_list)}] DoRA Adapter: {tag}", flush=True)
 
         processor, base = load_base_and_processor(args.base_model, args.load_in_4bit)
@@ -586,4 +383,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
