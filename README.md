@@ -198,3 +198,9 @@ This project was developed as part of the course Applied Data Science Project (A
 This repository is for academic purposes. Dataset licenses,
 external frameworks, and pretrained model licenses remain with their original
 owners.
+
+## Acknowledgments
+
+This project was carried out in collaboration with LINKS Foundation and Politecnico di Torino. We sincerely thank
+Prof. Giuseppe Rizzo, Federico D'Asaro, and Juan José Márquez Villacís for their
+supervision throughout the project.
