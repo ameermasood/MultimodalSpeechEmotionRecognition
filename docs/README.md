@@ -5,5 +5,5 @@ assets.
 
 ## Contents
 
-- **`adsp_mer_t11p7_paper.pdf`**  
+- **`adsp_mer_t11p7_paper.pdf`** (located at the repository root)
   Final written project paper.
