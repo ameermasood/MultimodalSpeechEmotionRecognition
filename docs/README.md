@@ -5,5 +5,5 @@ assets.
 
 ## Contents
 
-- **`multimodal_speech_emotion_recognition_paper.pdf`**  
+- **`adsp_mer_t11p7_paper.pdf`**  
   Final written project paper.

@@ -180,7 +180,7 @@ speech emotion recognition, while PEFT adaptation improves results substantially
 For the full written analysis, see:
 
 ```text
-docs/multimodal_speech_emotion_recognition_paper.pdf
+docs/adsp_mer_t11p7_paper.pdf
 ```
 
 ## Authors
