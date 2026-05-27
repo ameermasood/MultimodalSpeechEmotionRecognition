@@ -98,7 +98,6 @@ figures/
 plots/
 results/*
 !results/README.md
-docs/gantt.png
 
 # ================================
 # LaTeX build artifacts (if paper included)

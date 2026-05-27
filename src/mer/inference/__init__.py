@@ -1,5 +1,6 @@
 """Inference prompts, prediction helpers, and output parsing."""
 
+from mer.inference.demo import DemoEmotionPredictor, DemoPrediction
 from mer.inference.prompts import (
     SYSTEM_PROMPT,
     build_audio_content,
@@ -15,6 +16,8 @@ from mer.inference.voxtral import (
 )
 
 __all__ = [
+    "DemoEmotionPredictor",
+    "DemoPrediction",
     "SYSTEM_PROMPT",
     "add_zero_shot_predictions",
     "build_audio_content",

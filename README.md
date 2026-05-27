@@ -28,12 +28,12 @@ Angry, Happy, Sad, Neutral
 ```text
 .
 +-- data/            # dataset placeholders and local layout notes
-+-- docs/            # paper and lightweight documentation assets
 +-- notebooks/       # exploration notebook
 +-- results/         # result summaries and figures
 +-- scripts/         # task-based training and evaluation entry points
 +-- src/mer/         # reusable Python package
 +-- tests/           # lightweight tests for package helpers
++-- adsp_mer_t11p7_paper.pdf
 +-- pyproject.toml   # package metadata and mer CLI entry point
 +-- requirements.txt # Python dependencies
 +-- README.md
