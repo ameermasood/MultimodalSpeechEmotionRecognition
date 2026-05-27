@@ -24,6 +24,8 @@ ENV/
 # PyTorch / Model artifacts
 # ================================
 checkpoints/
+models/*
+!models/README.md
 outputs/
 runs/
 wandb/
