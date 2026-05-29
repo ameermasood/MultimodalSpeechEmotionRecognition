@@ -1,6 +1,6 @@
 # Demo
 
-This folder contains the local Streamlit demo for speech emotion recognition.
+This folder contains the local Gradio demo for speech emotion recognition.
 
 The demo is intentionally thin: UI code lives here, while model loading and
 prediction logic stays in the reusable `mer` package.
@@ -40,7 +40,7 @@ project requirements.
 Start the app:
 
 ```bash
-streamlit run demo/streamlit_app.py
+python3 demo/gradio_app.py
 ```
 
 Then upload an audio file and optionally paste a transcript.
@@ -59,4 +59,4 @@ download the base model into the Hugging Face cache.
 
 4-bit loading requires `bitsandbytes` and compatible GPU support. If
 `bitsandbytes` is not installed, keep **Load in 4-bit** disabled in the demo
-sidebar.
+advanced settings.
