@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from html import escape
 import os
+from typing import Any
 
 import gradio as gr
 
@@ -44,33 +45,30 @@ def build_app() -> gr.Blocks:
 
         with gr.Group(elem_classes="recognition-card"):
             gr.HTML(_card_intro_html())
-            with gr.Row(equal_height=False):
-                with gr.Column(scale=1, min_width=340):
-                    gr.HTML('<p class="field-label">Upload or record speech</p>')
-                    audio = gr.Audio(
-                        label="Upload or record speech",
-                        show_label=False,
-                        type="filepath",
-                        sources=["upload", "microphone"],
-                    )
-                    gr.HTML('<p class="field-label">Optional transcript</p>')
-                    transcript = gr.Textbox(
-                        label="Optional transcript",
-                        show_label=False,
-                        placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
-                        lines=4,
-                    )
-                    predict_button = gr.Button("Predict emotion", variant="primary", size="lg")
-
-                with gr.Column(scale=1, min_width=340):
-                    result_card = gr.HTML(_empty_result_html())
-                    label_scores = gr.HTML(_empty_scores_html())
+            gr.HTML('<p class="field-label">Upload or record speech</p>')
+            audio = gr.Audio(
+                label="Upload or record speech",
+                show_label=False,
+                type="filepath",
+                sources=["upload", "microphone"],
+            )
+            gr.HTML('<p class="field-label">Optional transcript</p>')
+            transcript = gr.Textbox(
+                label="Optional transcript",
+                show_label=False,
+                placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
+                lines=4,
+            )
+            predict_button = gr.Button("Predict emotion", variant="primary", size="lg")
+            result_card = gr.HTML(_empty_result_html())
+            label_scores = gr.HTML(_empty_scores_html())
 
         predict_button.click(
             fn=_predict,
             inputs=[audio, transcript],
             outputs=[result_card, label_scores],
             api_name=False,
+            preprocess=False,
         )
 
     return app
@@ -83,12 +81,19 @@ def _get_predictor(config: RuntimeConfig) -> DemoEmotionPredictor:
 
 
 def _predict(
-    audio_path: str | None,
+    audio_input: Any,
     transcript: str,
 ) -> tuple[str, str]:
     """Run one prediction from Gradio inputs."""
+    audio_path = _audio_path_from_input(audio_input)
     if not audio_path:
-        raise gr.Error("Upload or record an audio file first.")
+        return (
+            _message_result_html(
+                title="Upload audio first",
+                message="Add an audio file or record a short speech sample, then run prediction.",
+            ),
+            _empty_scores_html(),
+        )
 
     config = _default_runtime_config()
 
@@ -96,12 +101,31 @@ def _predict(
         predictor = _get_predictor(config)
         prediction = predictor.predict(audio_path, transcript=transcript or "")
     except Exception as exc:
-        raise gr.Error(f"Prediction failed: {exc}") from exc
+        return (
+            _message_result_html(
+                title="Prediction failed",
+                message=str(exc),
+            ),
+            _empty_scores_html(),
+        )
 
     return (
         _result_html(prediction),
         _scores_html(prediction.label_scores or {}),
     )
+
+
+def _audio_path_from_input(audio_input: Any) -> str | None:
+    """Extract a file path from Gradio audio input without audio decoding."""
+    if audio_input is None:
+        return None
+    if isinstance(audio_input, str):
+        return audio_input
+    if isinstance(audio_input, dict):
+        path = audio_input.get("path") or audio_input.get("name")
+        return str(path) if path else None
+    path = getattr(audio_input, "path", None) or getattr(audio_input, "name", None)
+    return str(path) if path else None
 
 
 def _default_runtime_config() -> RuntimeConfig:
@@ -155,10 +179,6 @@ def _card_intro_html() -> str:
             <p class="eyebrow">Interactive demo</p>
             <h2>Classify one speech sample</h2>
         </div>
-        <p>
-            Works with audio alone or audio plus transcript. The label confidence
-            compares the four allowed emotion labels for this one prediction.
-        </p>
     </div>
     """
 
@@ -182,6 +202,17 @@ def _empty_scores_html() -> str:
     <section class="score-card">
         <p class="eyebrow">Label distribution</p>
         <p class="muted-text">Run a prediction to compare the four emotion labels.</p>
+    </section>
+    """
+
+
+def _message_result_html(title: str, message: str) -> str:
+    """Render a friendly message in the prediction card."""
+    return f"""
+    <section class="result-card message-result">
+        <p class="eyebrow">Prediction</p>
+        <h2>{escape(title)}</h2>
+        <p class="subtitle">{escape(message)}</p>
     </section>
     """
 
@@ -264,7 +295,7 @@ def _custom_css() -> str:
 
     .hero-copy {
         margin: 0 auto;
-        max-width: 760px;
+        max-width: 900px;
         position: relative;
         text-align: center;
         z-index: 3;
@@ -277,6 +308,14 @@ def _custom_css() -> str:
         letter-spacing: 0;
         margin: 0 0 0.35rem;
         text-transform: uppercase;
+    }
+
+    .hero h1 {
+        color: #22242a;
+        font-size: clamp(2.2rem, 5vw, 3.4rem);
+        line-height: 1.05;
+        margin: 0;
+        white-space: nowrap;
     }
 
     .subtitle {
@@ -442,9 +481,15 @@ def _custom_css() -> str:
 
     .recognition-card button.primary,
     .recognition-card button[variant="primary"] {
-        background: linear-gradient(135deg, #168f82 0%, #0f766e 100%) !important;
-        border-color: #0f766e !important;
+        background: #111827 !important;
+        border-color: #111827 !important;
         color: #ffffff !important;
+    }
+
+    .recognition-card button.primary:hover,
+    .recognition-card button[variant="primary"]:hover {
+        background: #000000 !important;
+        border-color: #000000 !important;
     }
 
     .result-card {
@@ -453,6 +498,7 @@ def _custom_css() -> str:
         border-left: 6px solid #0f766e;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+        margin-top: 1rem;
         min-height: 230px;
         padding: 1.35rem 1.45rem;
     }
@@ -564,8 +610,7 @@ def _custom_css() -> str:
             text-align: center;
         }
 
-        .hero h1,
-        .hero h2 {
+        .hero h1 {
             font-size: 2.2rem;
             white-space: normal;
         }
