@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from html import escape
-from importlib.util import find_spec
-import json
 import os
-from pathlib import Path
-from typing import Any
 
 import gradio as gr
 
@@ -35,8 +31,6 @@ def main() -> None:
 
 def build_app() -> gr.Blocks:
     """Build the Gradio interface."""
-    bitsandbytes_available = find_spec("bitsandbytes") is not None
-
     with gr.Blocks(
         title="Speech Emotion Recognition",
         css=_custom_css(),
@@ -72,62 +66,10 @@ def build_app() -> gr.Blocks:
                     result_card = gr.HTML(_empty_result_html())
                     label_scores = gr.HTML(_empty_scores_html())
 
-        with gr.Accordion("Advanced settings", open=False):
-            gr.Markdown("These settings are useful for local experiments. Most demo runs can keep the defaults.")
-            with gr.Row():
-                with gr.Column():
-                    base_model = gr.Textbox(
-                        label="Base model",
-                        value=os.getenv("BASE_MODEL_ID", DEFAULT_BASE_MODEL),
-                    )
-                    adapter_path = gr.Textbox(
-                        label="Adapter path",
-                        value=os.getenv("ADAPTER_PATH", DEFAULT_ADAPTER_PATH),
-                    )
-                with gr.Column():
-                    device = gr.Dropdown(
-                        label="Device",
-                        choices=["auto", "mps", "cuda", "cuda:0", "cpu"],
-                        value=os.getenv("DEVICE", "auto"),
-                    )
-                    max_new_tokens = gr.Slider(
-                        label="Max new tokens",
-                        minimum=1,
-                        maximum=16,
-                        step=1,
-                        value=int(os.getenv("MAX_NEW_TOKENS", "8")),
-                    )
-                    load_in_4bit = gr.Checkbox(
-                        label="Load in 4-bit",
-                        value=_env_bool("LOAD_IN_4BIT", False) and bitsandbytes_available,
-                        interactive=bitsandbytes_available,
-                        info="Requires bitsandbytes and compatible GPU support.",
-                    )
-                    if not bitsandbytes_available:
-                        gr.Markdown("4-bit loading is unavailable because bitsandbytes is not installed.")
-
-            runtime_summary = gr.HTML()
-
-        with gr.Accordion("Technical details", open=False):
-            technical_details = gr.HTML(_technical_details_html({}))
-
-        advanced_inputs = [base_model, adapter_path, device, max_new_tokens, load_in_4bit]
-        for control in advanced_inputs:
-            control.change(
-                fn=_runtime_summary_html,
-                inputs=advanced_inputs,
-                outputs=runtime_summary,
-            )
-        app.load(
-            fn=_runtime_summary_html,
-            inputs=advanced_inputs,
-            outputs=runtime_summary,
-        )
-
         predict_button.click(
             fn=_predict,
-            inputs=[audio, transcript, *advanced_inputs],
-            outputs=[result_card, label_scores, technical_details],
+            inputs=[audio, transcript],
+            outputs=[result_card, label_scores],
             api_name=False,
         )
 
@@ -143,26 +85,12 @@ def _get_predictor(config: RuntimeConfig) -> DemoEmotionPredictor:
 def _predict(
     audio_path: str | None,
     transcript: str,
-    base_model_id: str,
-    adapter_path: str,
-    device: str,
-    max_new_tokens: int,
-    load_in_4bit: bool,
-) -> tuple[str, str, str]:
+) -> tuple[str, str]:
     """Run one prediction from Gradio inputs."""
     if not audio_path:
         raise gr.Error("Upload or record an audio file first.")
 
-    config = RuntimeConfig(
-        base_model_id=base_model_id.strip(),
-        adapter_path=adapter_path.strip(),
-        load_in_4bit=bool(load_in_4bit),
-        device=device,
-        max_new_tokens=int(max_new_tokens),
-        do_sample=False,
-        temperature=0.2,
-        top_p=0.95,
-    )
+    config = _default_runtime_config()
 
     try:
         predictor = _get_predictor(config)
@@ -173,7 +101,20 @@ def _predict(
     return (
         _result_html(prediction),
         _scores_html(prediction.label_scores or {}),
-        _technical_details_html(prediction.to_dict()),
+    )
+
+
+def _default_runtime_config() -> RuntimeConfig:
+    """Build demo runtime config from environment variables and defaults."""
+    return RuntimeConfig(
+        base_model_id=os.getenv("BASE_MODEL_ID", DEFAULT_BASE_MODEL).strip(),
+        adapter_path=os.getenv("ADAPTER_PATH", DEFAULT_ADAPTER_PATH).strip(),
+        load_in_4bit=_env_bool("LOAD_IN_4BIT", False),
+        device=os.getenv("DEVICE", "auto").strip(),
+        max_new_tokens=int(os.getenv("MAX_NEW_TOKENS", "8")),
+        do_sample=False,
+        temperature=0.2,
+        top_p=0.95,
     )
 
 
@@ -184,45 +125,10 @@ def _env_bool(key: str, default: bool) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
-def _runtime_summary_html(
-    base_model_id: str,
-    adapter_path: str,
-    device: str,
-    max_new_tokens: int,
-    load_in_4bit: bool,
-) -> str:
-    """Render compact runtime metadata."""
-    adapter = Path(adapter_path).name or adapter_path
-    precision = "4-bit" if load_in_4bit else "float16"
-    return f"""
-    <div class="runtime-strip">
-        <span><strong>Base</strong>{escape(base_model_id)}</span>
-        <span><strong>Adapter</strong>{escape(adapter)}</span>
-        <span><strong>Device</strong>{escape(device)}</span>
-        <span><strong>Precision</strong>{precision}</span>
-        <span><strong>Max tokens</strong>{int(max_new_tokens)}</span>
-    </div>
-    """
-
-
 def _header_html() -> str:
     """Render the app header."""
     return """
     <header class="hero">
-        <div class="hero-copy">
-            <p class="eyebrow">Multimodal speech emotion recognition</p>
-            <h1>How does this voice feel?</h1>
-            <p class="subtitle">
-                Upload or record speech, optionally add the transcript, and let a
-                PEFT-adapted Voxtral model estimate the speaker's emotional tone.
-            </p>
-            <div class="label-set">
-                <span>Angry</span>
-                <span>Happy</span>
-                <span>Sad</span>
-                <span>Neutral</span>
-            </div>
-        </div>
         <div class="emotion-stage" aria-hidden="true">
             <div class="emotion-orb orb-sad">
                 <span class="brow left"></span>
@@ -251,6 +157,41 @@ def _header_html() -> str:
                 <span class="eye left"></span>
                 <span class="eye right"></span>
                 <span class="mouth"></span>
+            </div>
+            <div class="emotion-orb orb-calm">
+                <span class="brow left"></span>
+                <span class="brow right"></span>
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+                <span class="mouth"></span>
+            </div>
+            <div class="emotion-orb orb-surprised">
+                <span class="brow left"></span>
+                <span class="brow right"></span>
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+                <span class="mouth"></span>
+            </div>
+            <div class="emotion-orb orb-tense">
+                <span class="brow left"></span>
+                <span class="brow right"></span>
+                <span class="eye left"></span>
+                <span class="eye right"></span>
+                <span class="mouth"></span>
+            </div>
+        </div>
+        <div class="hero-copy">
+            <p class="eyebrow">Multimodal speech emotion recognition</p>
+            <h1>How does this voice feel?</h1>
+            <p class="subtitle">
+                Upload or record speech, optionally add the transcript, and let a
+                PEFT-adapted Voxtral model estimate the speaker's emotional tone.
+            </p>
+            <div class="label-set">
+                <span>Angry</span>
+                <span>Happy</span>
+                <span>Sad</span>
+                <span>Neutral</span>
             </div>
         </div>
     </header>
@@ -348,14 +289,6 @@ def _scores_html(label_scores: dict[str, float]) -> str:
     """
 
 
-def _technical_details_html(payload: dict[str, Any]) -> str:
-    """Render technical payload as escaped JSON inside HTML."""
-    formatted = json.dumps(payload, indent=2, ensure_ascii=False)
-    return f"""
-    <pre class="technical-json">{escape(formatted)}</pre>
-    """
-
-
 def _custom_css() -> str:
     """Return Gradio CSS for the local demo."""
     return """
@@ -373,14 +306,19 @@ def _custom_css() -> str:
     .hero {
         align-items: center;
         display: flex;
-        gap: 2.25rem;
-        justify-content: space-between;
-        min-height: 250px;
-        padding: 1.35rem 0 1.6rem;
+        justify-content: center;
+        min-height: 330px;
+        overflow: hidden;
+        padding: 1.6rem 0 1.85rem;
+        position: relative;
     }
 
     .hero-copy {
-        max-width: 520px;
+        margin: 0 auto;
+        max-width: 760px;
+        position: relative;
+        text-align: center;
+        z-index: 3;
     }
 
     .eyebrow {
@@ -394,7 +332,7 @@ def _custom_css() -> str:
 
     .hero h1 {
         color: #22242a;
-        font-size: 3.2rem;
+        font-size: 3.65rem;
         line-height: 0.98;
         margin: 0;
     }
@@ -403,7 +341,7 @@ def _custom_css() -> str:
         color: #646b78;
         font-size: 1rem;
         line-height: 1.55;
-        margin: 0.55rem 0 0;
+        margin: 0.65rem auto 0;
         max-width: 720px;
     }
 
@@ -411,6 +349,7 @@ def _custom_css() -> str:
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        justify-content: center;
         margin-top: 1.15rem;
     }
 
@@ -425,10 +364,15 @@ def _custom_css() -> str:
     }
 
     .emotion-stage {
-        height: 250px;
-        min-width: 430px;
+        height: 100%;
+        inset: 0;
+        min-width: 0;
+        opacity: 0.34;
+        pointer-events: none;
         position: relative;
-        width: 46%;
+        position: absolute;
+        width: 100%;
+        z-index: 1;
     }
 
     .emotion-orb {
@@ -436,7 +380,7 @@ def _custom_css() -> str:
         box-shadow:
             inset -18px -26px 42px rgba(0, 0, 0, 0.17),
             inset 16px 16px 34px rgba(255, 255, 255, 0.22),
-            0 18px 32px rgba(31, 41, 55, 0.14);
+            0 18px 34px rgba(31, 41, 55, 0.16);
         position: absolute;
     }
 
@@ -452,38 +396,65 @@ def _custom_css() -> str:
     }
 
     .orb-happy {
-        background: linear-gradient(145deg, #b9f167 0%, #49cf42 62%, #2fa83d 100%);
-        height: 142px;
-        left: 155px;
-        top: 72px;
-        width: 142px;
+        background: linear-gradient(145deg, #ffe86d 0%, #f5c51b 62%, #dca20a 100%);
+        height: 150px;
+        left: 43%;
+        top: 18px;
+        width: 150px;
         z-index: 4;
     }
 
     .orb-sad {
         background: linear-gradient(145deg, #5d7df7 0%, #3344d2 64%, #242b92 100%);
-        height: 104px;
-        left: 12px;
-        top: 24px;
-        width: 104px;
+        height: 116px;
+        left: 14%;
+        top: 72px;
+        width: 116px;
         z-index: 2;
     }
 
     .orb-angry {
-        background: linear-gradient(145deg, #e77777 0%, #b93b5f 58%, #7e2941 100%);
-        height: 118px;
-        right: 18px;
-        top: 40px;
-        width: 118px;
+        background: linear-gradient(145deg, #f87171 0%, #dc2626 58%, #991b1b 100%);
+        height: 128px;
+        right: 14%;
+        top: 80px;
+        width: 128px;
         z-index: 3;
     }
 
     .orb-neutral {
         background: linear-gradient(145deg, #a5abb1 0%, #62686e 58%, #34383d 100%);
-        height: 88px;
-        right: 132px;
-        bottom: 8px;
-        width: 88px;
+        height: 96px;
+        right: 31%;
+        bottom: 14px;
+        width: 96px;
+        z-index: 1;
+    }
+
+    .orb-calm {
+        background: linear-gradient(145deg, #7dd3fc 0%, #06b6d4 58%, #0e7490 100%);
+        height: 102px;
+        left: 29%;
+        bottom: 22px;
+        width: 102px;
+        z-index: 2;
+    }
+
+    .orb-surprised {
+        background: linear-gradient(145deg, #d8b4fe 0%, #8b5cf6 58%, #6d28d9 100%);
+        height: 112px;
+        right: 4%;
+        bottom: 42px;
+        width: 112px;
+        z-index: 1;
+    }
+
+    .orb-tense {
+        background: linear-gradient(145deg, #fca5a5 0%, #f97316 56%, #c2410c 100%);
+        height: 90px;
+        left: 5%;
+        bottom: 38px;
+        width: 90px;
         z-index: 1;
     }
 
@@ -597,6 +568,47 @@ def _custom_css() -> str:
 
     .orb-neutral .brow {
         top: 28%;
+    }
+
+    .orb-calm .mouth {
+        border-bottom: 5px solid rgba(19, 78, 74, 0.48);
+        bottom: 25%;
+        height: 14%;
+        left: 36%;
+        width: 28%;
+    }
+
+    .orb-surprised .mouth {
+        background: rgba(58, 28, 91, 0.55);
+        border-radius: 50%;
+        bottom: 19%;
+        height: 24%;
+        left: 39%;
+        width: 22%;
+    }
+
+    .orb-surprised .brow.left {
+        transform: rotate(-12deg);
+    }
+
+    .orb-surprised .brow.right {
+        transform: rotate(12deg);
+    }
+
+    .orb-tense .brow.left {
+        transform: rotate(20deg);
+    }
+
+    .orb-tense .brow.right {
+        transform: rotate(-20deg);
+    }
+
+    .orb-tense .mouth {
+        background: rgba(90, 36, 19, 0.5);
+        bottom: 24%;
+        height: 5%;
+        left: 35%;
+        width: 30%;
     }
 
     .recognition-card {
@@ -795,45 +807,6 @@ def _custom_css() -> str:
         height: 100%;
     }
 
-    .technical-json {
-        background: #0f172a;
-        border-radius: 8px;
-        color: #e5edf7;
-        font-size: 0.82rem;
-        line-height: 1.5;
-        margin: 0;
-        overflow-x: auto;
-        padding: 1rem;
-        white-space: pre-wrap;
-    }
-
-    .runtime-strip {
-        display: grid;
-        gap: 0.7rem;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        margin-top: 0.65rem;
-    }
-
-    .runtime-strip span {
-        background: #f8fafc;
-        border: 1px solid #d8dee8;
-        border-radius: 8px;
-        color: #172033;
-        display: block;
-        font-size: 0.82rem;
-        min-width: 0;
-        overflow-wrap: anywhere;
-        padding: 0.7rem 0.75rem;
-    }
-
-    .runtime-strip strong {
-        color: #607086;
-        display: block;
-        font-size: 0.7rem;
-        margin-bottom: 0.25rem;
-        text-transform: uppercase;
-    }
-
     @media (max-width: 760px) {
         .hero,
         .card-intro,
@@ -842,13 +815,50 @@ def _custom_css() -> str:
             flex-direction: column;
         }
 
+        .hero {
+            min-height: 360px;
+        }
+
+        .hero-copy {
+            text-align: center;
+        }
+
         .hero h1 {
             font-size: 2.45rem;
         }
 
         .emotion-stage {
-            min-width: 0;
-            width: 100%;
+            opacity: 0.22;
+        }
+
+        .orb-happy {
+            left: 31%;
+            top: 16px;
+        }
+
+        .orb-sad {
+            left: -6%;
+            top: 92px;
+        }
+
+        .orb-angry {
+            right: -8%;
+            top: 112px;
+        }
+
+        .orb-calm {
+            left: 8%;
+            bottom: 26px;
+        }
+
+        .orb-neutral {
+            right: 12%;
+            bottom: 16px;
+        }
+
+        .orb-surprised,
+        .orb-tense {
+            display: none;
         }
 
         .metric-block {
@@ -856,9 +866,6 @@ def _custom_css() -> str:
             width: 100%;
         }
 
-        .runtime-strip {
-            grid-template-columns: 1fr;
-        }
     }
     """
 

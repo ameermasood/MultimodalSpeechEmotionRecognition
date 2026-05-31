@@ -57,6 +57,6 @@ Voxtral-Mini-3B is large. A practical local run usually needs a compatible GPU,
 enough memory, and the correct PyTorch/Transformers/PEFT stack. The first run may
 download the base model into the Hugging Face cache.
 
-4-bit loading requires `bitsandbytes` and compatible GPU support. If
-`bitsandbytes` is not installed, keep **Load in 4-bit** disabled in the demo
-advanced settings.
+Runtime settings are read from environment variables when needed, including
+`BASE_MODEL_ID`, `ADAPTER_PATH`, `DEVICE`, `MAX_NEW_TOKENS`, and
+`LOAD_IN_4BIT`.
