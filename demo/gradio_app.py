@@ -129,70 +129,19 @@ def _header_html() -> str:
     """Render the app header."""
     return """
     <header class="hero">
-        <div class="emotion-stage" aria-hidden="true">
-            <div class="emotion-orb orb-sad">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-happy">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-angry">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-neutral">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-calm">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-surprised">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
-            <div class="emotion-orb orb-tense">
-                <span class="brow left"></span>
-                <span class="brow right"></span>
-                <span class="eye left"></span>
-                <span class="eye right"></span>
-                <span class="mouth"></span>
-            </div>
+        <div class="emotion-bands" aria-hidden="true">
+            <span class="emotion-band band-sad"></span>
+            <span class="emotion-band band-happy"></span>
+            <span class="emotion-band band-angry"></span>
+            <span class="emotion-band band-neutral"></span>
         </div>
         <div class="hero-copy">
-            <p class="eyebrow">Multimodal speech emotion recognition</p>
-            <h1>How does this voice feel?</h1>
+            <h1>Speech Emotion Recognition</h1>
+            <p class="subtitle">AI Demo</p>
             <p class="subtitle">
-                Upload or record speech, optionally add the transcript, and let a
-                PEFT-adapted Voxtral model estimate the speaker's emotional tone.
+                Upload or record a speech sample. This demo uses a fine-tuned Voxtral
+                model to estimate one of four emotions in your speech: Angry, Happy, Sad, and Neutral.
             </p>
-            <div class="label-set">
-                <span>Angry</span>
-                <span>Happy</span>
-                <span>Sad</span>
-                <span>Neutral</span>
-            </div>
         </div>
     </header>
     """
@@ -330,13 +279,6 @@ def _custom_css() -> str:
         text-transform: uppercase;
     }
 
-    .hero h1 {
-        color: #22242a;
-        font-size: 3.65rem;
-        line-height: 0.98;
-        margin: 0;
-    }
-
     .subtitle {
         color: #646b78;
         font-size: 1rem;
@@ -363,252 +305,51 @@ def _custom_css() -> str:
         white-space: nowrap;
     }
 
-    .emotion-stage {
+    .emotion-bands {
         height: 100%;
         inset: 0;
-        min-width: 0;
-        opacity: 0.34;
         pointer-events: none;
-        position: relative;
         position: absolute;
         width: 100%;
         z-index: 1;
     }
 
-    .emotion-orb {
-        border-radius: 50%;
-        box-shadow:
-            inset -18px -26px 42px rgba(0, 0, 0, 0.17),
-            inset 16px 16px 34px rgba(255, 255, 255, 0.22),
-            0 18px 34px rgba(31, 41, 55, 0.16);
+    .emotion-band {
+        border-radius: 999px;
+        filter: blur(26px);
+        height: 58px;
+        opacity: 0.22;
         position: absolute;
+        transform: rotate(-9deg);
+        width: 42%;
     }
 
-    .emotion-orb::after {
-        background: rgba(255, 255, 255, 0.12);
-        border-radius: 50%;
-        content: "";
-        height: 34%;
-        left: 18%;
-        position: absolute;
-        top: 13%;
-        width: 38%;
-    }
-
-    .orb-happy {
-        background: linear-gradient(145deg, #ffe86d 0%, #f5c51b 62%, #dca20a 100%);
-        height: 150px;
-        left: 43%;
-        top: 18px;
-        width: 150px;
-        z-index: 4;
-    }
-
-    .orb-sad {
-        background: linear-gradient(145deg, #5d7df7 0%, #3344d2 64%, #242b92 100%);
-        height: 116px;
-        left: 14%;
-        top: 72px;
-        width: 116px;
-        z-index: 2;
-    }
-
-    .orb-angry {
-        background: linear-gradient(145deg, #f87171 0%, #dc2626 58%, #991b1b 100%);
-        height: 128px;
-        right: 14%;
-        top: 80px;
-        width: 128px;
-        z-index: 3;
-    }
-
-    .orb-neutral {
-        background: linear-gradient(145deg, #a5abb1 0%, #62686e 58%, #34383d 100%);
-        height: 96px;
-        right: 31%;
-        bottom: 14px;
-        width: 96px;
-        z-index: 1;
-    }
-
-    .orb-calm {
-        background: linear-gradient(145deg, #7dd3fc 0%, #06b6d4 58%, #0e7490 100%);
-        height: 102px;
-        left: 29%;
-        bottom: 22px;
-        width: 102px;
-        z-index: 2;
-    }
-
-    .orb-surprised {
-        background: linear-gradient(145deg, #d8b4fe 0%, #8b5cf6 58%, #6d28d9 100%);
-        height: 112px;
-        right: 4%;
-        bottom: 42px;
-        width: 112px;
-        z-index: 1;
-    }
-
-    .orb-tense {
-        background: linear-gradient(145deg, #fca5a5 0%, #f97316 56%, #c2410c 100%);
-        height: 90px;
+    .band-sad {
+        background: #2563eb;
         left: 5%;
-        bottom: 38px;
-        width: 90px;
-        z-index: 1;
+        top: 22%;
     }
 
-    .emotion-orb .eye {
-        background: #fbfbfb;
-        border-radius: 50%;
-        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
-        height: 31%;
-        position: absolute;
-        top: 34%;
-        width: 31%;
-        z-index: 2;
+    .band-happy {
+        background: #facc15;
+        left: 26%;
+        top: 12%;
+        transform: rotate(6deg);
     }
 
-    .emotion-orb .eye::after {
-        background: #2d2d32;
-        border-radius: 50%;
-        content: "";
-        height: 70%;
-        left: 15%;
-        position: absolute;
-        top: 15%;
-        width: 70%;
+    .band-angry {
+        background: #dc2626;
+        right: 6%;
+        top: 32%;
+        transform: rotate(-12deg);
     }
 
-    .emotion-orb .eye.left {
-        left: 22%;
-    }
-
-    .emotion-orb .eye.right {
-        right: 22%;
-    }
-
-    .emotion-orb .brow {
-        background: rgba(46, 40, 47, 0.46);
-        border-radius: 999px;
-        height: 6%;
-        position: absolute;
-        top: 26%;
-        width: 24%;
-        z-index: 3;
-    }
-
-    .emotion-orb .brow.left {
-        left: 23%;
-    }
-
-    .emotion-orb .brow.right {
-        right: 23%;
-    }
-
-    .emotion-orb .mouth {
-        border-radius: 999px;
-        position: absolute;
-        z-index: 3;
-    }
-
-    .orb-happy .mouth {
-        border-bottom: 7px solid rgba(42, 74, 39, 0.54);
-        bottom: 22%;
-        height: 18%;
-        left: 34%;
-        width: 32%;
-    }
-
-    .orb-happy .brow.left,
-    .orb-happy .brow.right {
-        transform: rotate(0deg);
-    }
-
-    .orb-sad .mouth {
-        border-top: 6px solid rgba(20, 25, 68, 0.5);
-        bottom: 19%;
-        height: 16%;
-        left: 32%;
+    .band-neutral {
+        background: #71717a;
+        bottom: 18%;
+        left: 31%;
+        transform: rotate(3deg);
         width: 36%;
-    }
-
-    .orb-sad .brow.left {
-        transform: rotate(-12deg);
-    }
-
-    .orb-sad .brow.right {
-        transform: rotate(12deg);
-    }
-
-    .orb-angry .brow.left {
-        transform: rotate(18deg);
-    }
-
-    .orb-angry .brow.right {
-        transform: rotate(-18deg);
-    }
-
-    .orb-angry .mouth {
-        background: rgba(70, 27, 39, 0.42);
-        bottom: 22%;
-        height: 5%;
-        left: 34%;
-        transform: rotate(2deg);
-        width: 34%;
-    }
-
-    .orb-neutral .mouth {
-        background: rgba(28, 31, 35, 0.5);
-        bottom: 28%;
-        height: 5%;
-        left: 37%;
-        width: 26%;
-    }
-
-    .orb-neutral .brow {
-        top: 28%;
-    }
-
-    .orb-calm .mouth {
-        border-bottom: 5px solid rgba(19, 78, 74, 0.48);
-        bottom: 25%;
-        height: 14%;
-        left: 36%;
-        width: 28%;
-    }
-
-    .orb-surprised .mouth {
-        background: rgba(58, 28, 91, 0.55);
-        border-radius: 50%;
-        bottom: 19%;
-        height: 24%;
-        left: 39%;
-        width: 22%;
-    }
-
-    .orb-surprised .brow.left {
-        transform: rotate(-12deg);
-    }
-
-    .orb-surprised .brow.right {
-        transform: rotate(12deg);
-    }
-
-    .orb-tense .brow.left {
-        transform: rotate(20deg);
-    }
-
-    .orb-tense .brow.right {
-        transform: rotate(-20deg);
-    }
-
-    .orb-tense .mouth {
-        background: rgba(90, 36, 19, 0.5);
-        bottom: 24%;
-        height: 5%;
-        left: 35%;
-        width: 30%;
     }
 
     .recognition-card {
@@ -823,42 +564,37 @@ def _custom_css() -> str:
             text-align: center;
         }
 
-        .hero h1 {
-            font-size: 2.45rem;
+        .hero h1,
+        .hero h2 {
+            font-size: 2.2rem;
+            white-space: normal;
         }
 
-        .emotion-stage {
-            opacity: 0.22;
+        .emotion-band {
+            height: 46px;
+            opacity: 0.18;
+            width: 62%;
         }
 
-        .orb-happy {
-            left: 31%;
-            top: 16px;
+        .band-sad {
+            left: -16%;
+            top: 24%;
         }
 
-        .orb-sad {
-            left: -6%;
-            top: 92px;
+        .band-happy {
+            left: 28%;
+            top: 10%;
         }
 
-        .orb-angry {
-            right: -8%;
-            top: 112px;
+        .band-angry {
+            right: -22%;
+            top: 38%;
         }
 
-        .orb-calm {
-            left: 8%;
-            bottom: 26px;
-        }
-
-        .orb-neutral {
-            right: 12%;
-            bottom: 16px;
-        }
-
-        .orb-surprised,
-        .orb-tense {
-            display: none;
+        .band-neutral {
+            bottom: 22%;
+            left: 20%;
+            width: 62%;
         }
 
         .metric-block {
