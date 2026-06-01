@@ -73,15 +73,15 @@ def build_app() -> gr.Blocks:
                 elem_classes="predict-button",
             )
             processing_status = gr.HTML("")
-            result_card = gr.HTML(_empty_result_html())
             label_scores = gr.HTML(_empty_scores_html())
+            result_card = gr.HTML(_empty_result_html())
 
         gr.HTML(_footer_html())
 
         predict_button.click(
             fn=_predict,
             inputs=[audio, transcript],
-            outputs=[processing_status, result_card, label_scores],
+            outputs=[processing_status, label_scores, result_card],
             api_name=False,
             preprocess=False,
             show_progress="hidden",
@@ -105,11 +105,11 @@ def _predict(
     if not audio_path:
         yield (
             "",
+            _empty_scores_html(),
             _message_result_html(
                 title="Upload audio first",
                 message="Add an audio file or record a short speech sample, then run prediction.",
             ),
-            _empty_scores_html(),
         )
         return
 
@@ -123,8 +123,8 @@ def _predict(
                 title="Preparing audio",
                 detail="Reading the uploaded speech sample.",
             ),
-            _empty_result_html(),
             _empty_scores_html(),
+            _empty_result_html(),
         )
 
         with ThreadPoolExecutor(max_workers=1) as executor:
@@ -137,8 +137,8 @@ def _predict(
                         title=_progress_title(percent),
                         detail=_progress_detail(percent),
                     ),
-                    _empty_result_html(),
                     _empty_scores_html(),
+                    _empty_result_html(),
                 )
                 time.sleep(0.45)
                 percent = _next_progress_percent(percent)
@@ -152,11 +152,11 @@ def _predict(
                 detail="Check the audio file and local model artifacts.",
                 state="error",
             ),
+            _empty_scores_html(),
             _message_result_html(
                 title="Prediction failed",
                 message=str(exc),
             ),
-            _empty_scores_html(),
         )
         return
 
@@ -167,8 +167,8 @@ def _predict(
             detail="Prediction ready.",
             state="complete",
         ),
-        _result_html(prediction),
         _scores_html(prediction.label_scores or {}),
+        _result_html(prediction),
     )
 
 
@@ -297,10 +297,7 @@ def _empty_result_html() -> str:
     return """
     <section class="result-card empty-result">
         <p class="eyebrow">Prediction</p>
-        <h2>Waiting for audio</h2>
-        <p class="subtitle">
-            Your emotion label, confidence score, and label distribution will appear here.
-        </p>
+        <h2>Pending</h2>
     </section>
     """
 
@@ -423,29 +420,26 @@ def _custom_css() -> str:
         display: flex;
         justify-content: center;
         min-height: 170px;
-        overflow: hidden;
+        overflow: visible;
         padding: 0.85rem 1rem 0.95rem;
         position: relative;
     }
 
     .hero-brand {
-        align-items: center;
-        display: flex;
-        justify-content: flex-end;
-        position: absolute;
-        right: 1rem;
-        top: 1rem;
-        width: 150px;
-        z-index: 1;
-    }
+    position: absolute;
+    left: 50%;
+    top: 1rem;
+    transform: translateX(-50%);
+    width: 200px;
+}
 
     .polito-logo {
         display: block;
         height: auto;
-        max-height: 48px;
-        max-width: 150px;
+        max-height: 300px;
+        max-width: 300px;
         object-fit: contain;
-        opacity: 0.86;
+        opacity: 0.2;
         width: 100%;
     }
 
