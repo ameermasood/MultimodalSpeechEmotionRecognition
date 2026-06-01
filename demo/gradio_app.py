@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from html import escape
 import os
+import time
 from typing import Any
 
 import gradio as gr
@@ -60,15 +63,17 @@ def build_app() -> gr.Blocks:
                 lines=4,
             )
             predict_button = gr.Button("Predict emotion", variant="primary", size="lg")
+            processing_status = gr.HTML("")
             result_card = gr.HTML(_empty_result_html())
             label_scores = gr.HTML(_empty_scores_html())
 
         predict_button.click(
             fn=_predict,
             inputs=[audio, transcript],
-            outputs=[result_card, label_scores],
+            outputs=[processing_status, result_card, label_scores],
             api_name=False,
             preprocess=False,
+            show_progress="hidden",
         )
 
     return app
@@ -83,36 +88,110 @@ def _get_predictor(config: RuntimeConfig) -> DemoEmotionPredictor:
 def _predict(
     audio_input: Any,
     transcript: str,
-) -> tuple[str, str]:
+) -> Iterator[tuple[str, str, str]]:
     """Run one prediction from Gradio inputs."""
     audio_path = _audio_path_from_input(audio_input)
     if not audio_path:
-        return (
+        yield (
+            "",
             _message_result_html(
                 title="Upload audio first",
                 message="Add an audio file or record a short speech sample, then run prediction.",
             ),
             _empty_scores_html(),
         )
+        return
 
     config = _default_runtime_config()
 
     try:
         predictor = _get_predictor(config)
-        prediction = predictor.predict(audio_path, transcript=transcript or "")
+        yield (
+            _processing_status_html(
+                percent=6,
+                title="Preparing audio",
+                detail="Reading the uploaded speech sample.",
+            ),
+            _empty_result_html(),
+            _empty_scores_html(),
+        )
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(predictor.predict, audio_path, transcript or "")
+            percent = 10
+            while not future.done():
+                yield (
+                    _processing_status_html(
+                        percent=percent,
+                        title=_progress_title(percent),
+                        detail=_progress_detail(percent),
+                    ),
+                    _empty_result_html(),
+                    _empty_scores_html(),
+                )
+                time.sleep(0.45)
+                percent = _next_progress_percent(percent)
+
+            prediction = future.result()
     except Exception as exc:
-        return (
+        yield (
+            _processing_status_html(
+                percent=100,
+                title="Prediction failed",
+                detail="Check the audio file and local model artifacts.",
+                state="error",
+            ),
             _message_result_html(
                 title="Prediction failed",
                 message=str(exc),
             ),
             _empty_scores_html(),
         )
+        return
 
-    return (
+    yield (
+        _processing_status_html(
+            percent=100,
+            title="Complete",
+            detail="Prediction ready.",
+            state="complete",
+        ),
         _result_html(prediction),
         _scores_html(prediction.label_scores or {}),
     )
+
+
+def _next_progress_percent(percent: int) -> int:
+    """Advance estimated progress without reaching completion before inference ends."""
+    if percent < 35:
+        return percent + 5
+    if percent < 70:
+        return percent + 3
+    if percent < 90:
+        return percent + 2
+    return min(96, percent + 1)
+
+
+def _progress_title(percent: int) -> str:
+    """Return a stage title for estimated inference progress."""
+    if percent < 35:
+        return "Loading model"
+    if percent < 70:
+        return "Analyzing speech"
+    if percent < 90:
+        return "Scoring labels"
+    return "Finalizing"
+
+
+def _progress_detail(percent: int) -> str:
+    """Return a short explanation for estimated inference progress."""
+    if percent < 35:
+        return "The first run can take longer while Voxtral and the adapter load."
+    if percent < 70:
+        return "Processing the speech sample with the fine-tuned model."
+    if percent < 90:
+        return "Comparing Angry, Happy, Sad, and Neutral."
+    return "Waiting for the model to finish cleanly."
 
 
 def _audio_path_from_input(audio_input: Any) -> str | None:
@@ -202,6 +281,26 @@ def _empty_scores_html() -> str:
     <section class="score-card">
         <p class="eyebrow">Label distribution</p>
         <p class="muted-text">Run a prediction to compare the four emotion labels.</p>
+    </section>
+    """
+
+
+def _processing_status_html(percent: int, title: str, detail: str, state: str = "active") -> str:
+    """Render a compact processing progress bar."""
+    percent = max(0, min(100, percent))
+    return f"""
+    <section class="processing-status processing-{state}">
+        <div class="processing-row">
+            <div>
+                <p class="eyebrow">Processing</p>
+                <strong>{escape(title)}</strong>
+                <span>{escape(detail)}</span>
+            </div>
+            <b>{percent}%</b>
+        </div>
+        <div class="processing-track">
+            <div class="processing-fill" style="width: {percent}%;"></div>
+        </div>
     </section>
     """
 
@@ -490,6 +589,72 @@ def _custom_css() -> str:
     .recognition-card button[variant="primary"]:hover {
         background: #000000 !important;
         border-color: #000000 !important;
+    }
+
+    .processing-status {
+        background: rgba(17, 24, 39, 0.96);
+        border: 1px solid rgba(17, 24, 39, 0.95);
+        border-radius: 8px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+        margin-top: 0.9rem;
+        padding: 0.95rem 1rem;
+    }
+
+    .processing-row {
+        align-items: flex-start;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .processing-row .eyebrow {
+        color: #67e8f9;
+        margin-bottom: 0.2rem;
+    }
+
+    .processing-row strong {
+        color: #ffffff;
+        display: block;
+        font-size: 1rem;
+        line-height: 1.25;
+    }
+
+    .processing-row span {
+        color: #cbd5e1;
+        display: block;
+        font-size: 0.86rem;
+        line-height: 1.45;
+        margin-top: 0.2rem;
+    }
+
+    .processing-row b {
+        color: #ffffff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    .processing-track {
+        background: rgba(148, 163, 184, 0.26);
+        border-radius: 999px;
+        height: 0.55rem;
+        margin-top: 0.8rem;
+        overflow: hidden;
+    }
+
+    .processing-fill {
+        background: linear-gradient(90deg, #67e8f9 0%, #22c55e 100%);
+        border-radius: 999px;
+        height: 100%;
+        transition: width 240ms ease;
+    }
+
+    .processing-complete .processing-fill {
+        background: #22c55e;
+    }
+
+    .processing-error .processing-fill {
+        background: #ef4444;
     }
 
     .result-card {
