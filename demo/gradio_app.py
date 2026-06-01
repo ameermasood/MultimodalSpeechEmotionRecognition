@@ -592,10 +592,10 @@ def _custom_css() -> str:
     }
 
     .processing-status {
-        background: rgba(17, 24, 39, 0.96);
-        border: 1px solid rgba(17, 24, 39, 0.95);
+        background: #09090b;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
         margin-top: 0.9rem;
         padding: 0.95rem 1rem;
     }
@@ -608,12 +608,12 @@ def _custom_css() -> str:
     }
 
     .processing-row .eyebrow {
-        color: #67e8f9;
+        color: #a3e635;
         margin-bottom: 0.2rem;
     }
 
     .processing-row strong {
-        color: #ffffff;
+        color: #f8fafc;
         display: block;
         font-size: 1rem;
         line-height: 1.25;
@@ -628,14 +628,14 @@ def _custom_css() -> str:
     }
 
     .processing-row b {
-        color: #ffffff;
+        color: #f8fafc;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.95rem;
         white-space: nowrap;
     }
 
     .processing-track {
-        background: rgba(148, 163, 184, 0.26);
+        background: #27272a;
         border-radius: 999px;
         height: 0.55rem;
         margin-top: 0.8rem;
@@ -643,14 +643,14 @@ def _custom_css() -> str:
     }
 
     .processing-fill {
-        background: linear-gradient(90deg, #67e8f9 0%, #22c55e 100%);
+        background: linear-gradient(90deg, #a3e635 0%, #22c55e 100%);
         border-radius: 999px;
         height: 100%;
         transition: width 240ms ease;
     }
 
     .processing-complete .processing-fill {
-        background: #22c55e;
+        background: linear-gradient(90deg, #a3e635 0%, #22c55e 100%);
     }
 
     .processing-error .processing-fill {
