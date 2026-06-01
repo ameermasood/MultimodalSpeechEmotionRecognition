@@ -6,7 +6,9 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from html import escape
+import base64
 import os
+from pathlib import Path
 import time
 from typing import Any
 
@@ -18,6 +20,8 @@ from mer.inference import DemoEmotionPredictor
 
 DEFAULT_BASE_MODEL = "mistralai/Voxtral-Mini-3B-2507"
 DEFAULT_ADAPTER_PATH = "checkpoints/final_adapter_dora"
+GITHUB_URL = "https://github.com/ameermasood/MultimodalSpeechEmotionRecognition"
+POLITO_LOGO_PATH = Path(__file__).resolve().parent / "assets" / "polito_logo.png"
 EMOTION_COLORS = {
     "Angry": "#c2410c",
     "Happy": "#047857",
@@ -71,6 +75,8 @@ def build_app() -> gr.Blocks:
             processing_status = gr.HTML("")
             result_card = gr.HTML(_empty_result_html())
             label_scores = gr.HTML(_empty_scores_html())
+
+        gr.HTML(_footer_html())
 
         predict_button.click(
             fn=_predict,
@@ -235,24 +241,30 @@ def _env_bool(key: str, default: bool) -> bool:
 
 def _header_html() -> str:
     """Render the app header."""
-    return """
+    logo = _polito_logo_data_uri()
+    logo_html = f'<img class="polito-logo" src="{logo}" alt="Politecnico di Torino logo">' if logo else ""
+    return f"""
     <header class="hero">
-        <div class="emotion-bands" aria-hidden="true">
-            <span class="emotion-band band-sad"></span>
-            <span class="emotion-band band-happy"></span>
-            <span class="emotion-band band-angry"></span>
-            <span class="emotion-band band-neutral"></span>
+        <div class="hero-brand">
+            {logo_html}
         </div>
         <div class="hero-copy">
-            <h1>Speech Emotion Recognition</h1>
-            <p class="subtitle">AI Demo</p>
+            <h1>Multimodal Speech Emotion Recognition</h1>
             <p class="subtitle">
-                Upload or record a speech sample. This demo uses a fine-tuned Voxtral
-                model to estimate one of four emotions in your speech: Angry, Happy, Sad, and Neutral.
+                Upload speech audio, optionally add transcript, and predict emotion.
             </p>
         </div>
     </header>
     """
+
+
+@lru_cache(maxsize=1)
+def _polito_logo_data_uri() -> str:
+    """Return the PoliTo logo as a data URI if the local asset exists."""
+    if not POLITO_LOGO_PATH.is_file():
+        return ""
+    encoded = base64.b64encode(POLITO_LOGO_PATH.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 def _card_intro_html() -> str:
@@ -260,10 +272,23 @@ def _card_intro_html() -> str:
     return """
     <div class="card-intro">
         <div>
-            <p class="eyebrow">Interactive demo</p>
-            <h2>Classify one speech sample</h2>
+            <h2>DEMO</h2>
         </div>
     </div>
+    """
+
+
+def _footer_html() -> str:
+    """Render the project reference footer."""
+    return f"""
+    <footer class="project-footer">
+        <div class="footer-main">
+            <a href="{GITHUB_URL}" target="_blank" rel="noopener noreferrer">GitHub</a> | Demo Developed by <span>Amir Masoud Almasi</span> | Supervised by <span>Politecnico di Torino</span> and <span>LINKS Foundation</span>
+        </div>
+        <div class="footer-meta">
+            <span aria-hidden="true"></span>
+        </div>
+    </footer>
     """
 
 
@@ -376,37 +401,67 @@ def _scores_html(label_scores: dict[str, float]) -> str:
 def _custom_css() -> str:
     """Return Gradio CSS for the local demo."""
     return """
+    html,
     body,
+    #root,
+    .app,
+    main,
     .gradio-container {
-        background: #eef0f2 !important;
+        background: #ffffff !important;
     }
 
     .gradio-container {
-        max-width: 1120px !important;
-        margin: 0 auto !important;
-        padding: 22px 20px 34px !important;
+        margin: 0 !important;
+        max-width: none !important;
+        min-height: 100vh !important;
+        padding: 10px 32px 28px !important;
+        width: 100% !important;
     }
 
     .hero {
         align-items: center;
         display: flex;
         justify-content: center;
-        min-height: 330px;
+        min-height: 170px;
         overflow: hidden;
-        padding: 1.6rem 0 1.85rem;
+        padding: 0.85rem 1rem 0.95rem;
         position: relative;
+    }
+
+    .hero-brand {
+        align-items: center;
+        display: flex;
+        justify-content: flex-end;
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        width: 150px;
+        z-index: 1;
+    }
+
+    .polito-logo {
+        display: block;
+        height: auto;
+        max-height: 48px;
+        max-width: 150px;
+        object-fit: contain;
+        opacity: 0.86;
+        width: 100%;
     }
 
     .hero-copy {
+        background: transparent;
+        border-radius: 8px;
         margin: 0 auto;
-        max-width: 900px;
+        max-width: 1160px;
+        padding: 0.65rem 8.5rem;
         position: relative;
         text-align: center;
-        z-index: 3;
+        z-index: 2;
     }
 
     .eyebrow {
-        color: #146c63;
+        color: #003576;
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0;
@@ -415,11 +470,13 @@ def _custom_css() -> str:
     }
 
     .hero h1 {
-        color: #22242a;
-        font-size: clamp(2.2rem, 5vw, 3.4rem);
+        color: #111827;
+        font-size: clamp(2.35rem, 4.1vw, 3.75rem);
         line-height: 1.05;
         margin: 0;
+        max-width: 100%;
         white-space: nowrap;
+        text-wrap: balance;
     }
 
     .subtitle {
@@ -448,53 +505,6 @@ def _custom_css() -> str:
         white-space: nowrap;
     }
 
-    .emotion-bands {
-        height: 100%;
-        inset: 0;
-        pointer-events: none;
-        position: absolute;
-        width: 100%;
-        z-index: 1;
-    }
-
-    .emotion-band {
-        border-radius: 999px;
-        filter: blur(26px);
-        height: 58px;
-        opacity: 0.22;
-        position: absolute;
-        transform: rotate(-9deg);
-        width: 42%;
-    }
-
-    .band-sad {
-        background: #2563eb;
-        left: 5%;
-        top: 22%;
-    }
-
-    .band-happy {
-        background: #facc15;
-        left: 26%;
-        top: 12%;
-        transform: rotate(6deg);
-    }
-
-    .band-angry {
-        background: #dc2626;
-        right: 6%;
-        top: 32%;
-        transform: rotate(-12deg);
-    }
-
-    .band-neutral {
-        background: #71717a;
-        bottom: 18%;
-        left: 31%;
-        transform: rotate(3deg);
-        width: 36%;
-    }
-
     .recognition-card {
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(248, 250, 252, 0.7) 100%) !important;
@@ -502,7 +512,7 @@ def _custom_css() -> str:
         border-radius: 8px !important;
         box-shadow: 0 20px 52px rgba(30, 41, 59, 0.1) !important;
         margin-bottom: 1rem;
-        padding: 1.1rem !important;
+        padding: 1rem !important;
     }
 
     .recognition-card,
@@ -530,7 +540,7 @@ def _custom_css() -> str:
         display: flex;
         gap: 1.5rem;
         justify-content: space-between;
-        margin-bottom: 0.9rem;
+        margin-bottom: 0.65rem;
     }
 
     .card-intro h2 {
@@ -549,7 +559,7 @@ def _custom_css() -> str:
     }
 
     .field-label {
-        color: #146c63;
+        color: #003576;
         font-size: 0.78rem;
         font-weight: 750;
         letter-spacing: 0;
@@ -620,7 +630,7 @@ def _custom_css() -> str:
     }
 
     .processing-row .eyebrow {
-        color: #111827;
+        color: #003576;
         margin-bottom: 0.2rem;
     }
 
@@ -672,11 +682,11 @@ def _custom_css() -> str:
     .result-card {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid #dde3eb;
-        border-left: 6px solid #0f766e;
+        border-left: 6px solid #003576;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
         margin-top: 1rem;
-        min-height: 230px;
+        min-height: 190px;
         padding: 1.35rem 1.45rem;
     }
 
@@ -771,7 +781,54 @@ def _custom_css() -> str:
         height: 100%;
     }
 
-    footer,
+    .project-footer {
+        align-items: center;
+        border-top: 1px solid #e5e7eb;
+        color: #64748b;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.88rem;
+        gap: 0.25rem;
+        justify-content: center;
+        margin: 1.4rem 0 0;
+        padding: 1rem 0 0;
+        text-align: center;
+    }
+
+    .footer-main {
+        color: #111827;
+        font-weight: 500;
+    }
+
+    .footer-main strong {
+        color: #003576;
+        font-weight: 750;
+    }
+
+    .footer-main span {
+        color: #003576;
+        font-weight: 650;
+    }
+
+    .footer-meta {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        justify-content: center;
+    }
+
+    .project-footer a {
+        color: #003576;
+        font-weight: 750;
+        text-decoration: none;
+    }
+
+    .project-footer a:hover {
+        text-decoration: underline;
+    }
+
+    footer:not(.project-footer),
     .footer,
     .built-with,
     a[href*="gradio.app"],
@@ -789,10 +846,19 @@ def _custom_css() -> str:
         }
 
         .hero {
-            min-height: 360px;
+            min-height: 220px;
+            padding-inline: 0;
+        }
+
+        .hero-brand {
+            justify-content: center;
+            position: static;
+            width: 130px;
+            margin: 0 auto 0.85rem;
         }
 
         .hero-copy {
+            padding: 0;
             text-align: center;
         }
 
@@ -801,31 +867,8 @@ def _custom_css() -> str:
             white-space: normal;
         }
 
-        .emotion-band {
-            height: 46px;
-            opacity: 0.18;
-            width: 62%;
-        }
-
-        .band-sad {
-            left: -16%;
-            top: 24%;
-        }
-
-        .band-happy {
-            left: 28%;
-            top: 10%;
-        }
-
-        .band-angry {
-            right: -22%;
-            top: 38%;
-        }
-
-        .band-neutral {
-            bottom: 22%;
-            left: 20%;
-            width: 62%;
+        .gradio-container {
+            padding: 10px 16px 26px !important;
         }
 
         .metric-block {
