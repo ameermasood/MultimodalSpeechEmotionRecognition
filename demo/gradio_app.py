@@ -62,7 +62,12 @@ def build_app() -> gr.Blocks:
                 placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
                 lines=4,
             )
-            predict_button = gr.Button("Predict emotion", variant="primary", size="lg")
+            predict_button = gr.Button(
+                "Predict emotion",
+                variant="primary",
+                size="lg",
+                elem_classes="predict-button",
+            )
             processing_status = gr.HTML("")
             result_card = gr.HTML(_empty_result_html())
             label_scores = gr.HTML(_empty_scores_html())
@@ -578,24 +583,31 @@ def _custom_css() -> str:
         font-weight: 750 !important;
     }
 
+    .recognition-card .predict-button,
+    .recognition-card .predict-button button,
     .recognition-card button.primary,
     .recognition-card button[variant="primary"] {
-        background: #111827 !important;
-        border-color: #111827 !important;
+        background: #000000 !important;
+        background-color: #000000 !important;
+        border-color: #000000 !important;
         color: #ffffff !important;
     }
 
+    .recognition-card .predict-button:hover,
+    .recognition-card .predict-button button:hover,
     .recognition-card button.primary:hover,
     .recognition-card button[variant="primary"]:hover {
         background: #000000 !important;
+        background-color: #000000 !important;
         border-color: #000000 !important;
+        color: #ffffff !important;
     }
 
     .processing-status {
-        background: #09090b;
-        border: 1px solid #27272a;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #e5e7eb;
         border-radius: 8px;
-        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
         margin-top: 0.9rem;
         padding: 0.95rem 1rem;
     }
@@ -608,19 +620,19 @@ def _custom_css() -> str:
     }
 
     .processing-row .eyebrow {
-        color: #a3e635;
+        color: #111827;
         margin-bottom: 0.2rem;
     }
 
     .processing-row strong {
-        color: #f8fafc;
+        color: #111827;
         display: block;
         font-size: 1rem;
         line-height: 1.25;
     }
 
     .processing-row span {
-        color: #cbd5e1;
+        color: #607086;
         display: block;
         font-size: 0.86rem;
         line-height: 1.45;
@@ -628,14 +640,14 @@ def _custom_css() -> str:
     }
 
     .processing-row b {
-        color: #f8fafc;
+        color: #111827;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.95rem;
         white-space: nowrap;
     }
 
     .processing-track {
-        background: #27272a;
+        background: #e5e7eb;
         border-radius: 999px;
         height: 0.55rem;
         margin-top: 0.8rem;
@@ -643,14 +655,14 @@ def _custom_css() -> str:
     }
 
     .processing-fill {
-        background: linear-gradient(90deg, #a3e635 0%, #22c55e 100%);
+        background: #111827;
         border-radius: 999px;
         height: 100%;
         transition: width 240ms ease;
     }
 
     .processing-complete .processing-fill {
-        background: linear-gradient(90deg, #a3e635 0%, #22c55e 100%);
+        background: #111827;
     }
 
     .processing-error .processing-fill {
@@ -757,6 +769,15 @@ def _custom_css() -> str:
     .score-fill {
         border-radius: 999px;
         height: 100%;
+    }
+
+    footer,
+    .footer,
+    .built-with,
+    a[href*="gradio.app"],
+    a[href*="/api"] {
+        display: none !important;
+        visibility: hidden !important;
     }
 
     @media (max-width: 760px) {
