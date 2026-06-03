@@ -10,7 +10,7 @@ prediction logic stays in the reusable `mer` package.
 The app is titled:
 
 ```text
-Speech Emotion Recognition System
+Multimodal Speech Emotion Recognition
 ```
 
 It supports:
