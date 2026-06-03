@@ -45,7 +45,7 @@ README is tracked by git.
 
 ## Demo Notes
 
-The Streamlit demo expects:
+The Gradio demo expects:
 
 - A Voxtral base model, either from Hugging Face or a local path here
 - A fine-tuned PEFT adapter under `checkpoints/`, for example

@@ -249,7 +249,7 @@ def _header_html() -> str:
             {logo_html}
         </div>
         <div class="hero-copy">
-            <h1>MultimodalSpeech Emotion Recognition</h1>
+            <h1>Multimodal Speech Emotion Recognition</h1>
             <p class="subtitle">
                 Upload or record speech, add a transcript if available, and predict the speaker’s emotion.
             </p>

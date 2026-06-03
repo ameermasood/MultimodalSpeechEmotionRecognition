@@ -1,9 +1,29 @@
-# Demo
+# Gradio Demo
 
 This folder contains the local Gradio demo for speech emotion recognition.
 
 The demo is intentionally thin: UI code lives here, while model loading and
 prediction logic stays in the reusable `mer` package.
+
+## What It Shows
+
+The app is titled:
+
+```text
+Speech Emotion Recognition System
+```
+
+It supports:
+
+- Uploading or recording a speech sample
+- Optional transcript input for audio-plus-text inference
+- Prediction over the four labels: `Angry`, `Happy`, `Sad`, `Neutral`
+- A dynamic prediction panel with label confidence
+- A label distribution section inside the prediction panel
+
+In this project, multimodal means multimodal input: speech audio can be used
+alone, or combined with optional transcript text. The output is a classification
+result, not a multimodal generated output.
 
 ## Required Artifacts
 
@@ -26,6 +46,16 @@ The base model is loaded from Hugging Face by default:
 mistralai/Voxtral-Mini-3B-2507
 ```
 
+You can override runtime paths with environment variables:
+
+```bash
+BASE_MODEL_ID=mistralai/Voxtral-Mini-3B-2507
+ADAPTER_PATH=checkpoints/final_adapter_dora
+DEVICE=auto
+MAX_NEW_TOKENS=8
+LOAD_IN_4BIT=false
+```
+
 ## Run Locally
 
 Install the project in editable mode:
@@ -43,7 +73,14 @@ Start the app:
 python3 demo/gradio_app.py
 ```
 
-Then upload an audio file and optionally paste a transcript.
+For UI work, Gradio's CLI is more convenient because it can reload after code
+changes:
+
+```bash
+PYTHONPATH=src gradio demo/gradio_app.py
+```
+
+Then upload or record an audio file and optionally paste a transcript.
 
 The displayed label confidence is computed by scoring each allowed emotion label
 (`Angry`, `Happy`, `Sad`, `Neutral`) as a candidate continuation and normalizing

@@ -33,6 +33,8 @@ Angry, Happy, Sad, Neutral
 +-- scripts/         # task-based training and evaluation entry points
 +-- src/mer/         # reusable Python package
 +-- tests/           # lightweight tests for package helpers
++-- demo/            # local Gradio inference demo
++-- models/          # placeholder for optional local base model files
 +-- adsp_mer_t11p7_paper.pdf
 +-- pyproject.toml   # package metadata and mer CLI entry point
 +-- requirements.txt # Python dependencies
@@ -134,6 +136,42 @@ The intended chained flow is:
 2. Train or provide PEFT adapters.
 3. Evaluate adapters on ESD.
 4. Evaluate transfer to IEMOCAP.
+
+## Interactive Demo
+
+The repository includes a local Gradio demo titled:
+
+```text
+Speech Emotion Recognition System
+```
+
+The demo provides a simple inference interface for the fine-tuned model:
+
+- Upload or record a speech audio sample.
+- Optionally provide the transcript text.
+- Predict one of `Angry`, `Happy`, `Sad`, or `Neutral`.
+- Display label confidence and the normalized label distribution.
+
+Run it from the repository root:
+
+```bash
+python3 demo/gradio_app.py
+```
+
+For UI development with automatic reload, use Gradio's CLI:
+
+```bash
+PYTHONPATH=src gradio demo/gradio_app.py
+```
+
+The demo expects a Voxtral base model, loaded by default from Hugging Face, and
+a fine-tuned PEFT adapter such as:
+
+```text
+checkpoints/final_adapter_dora/
+```
+
+See `demo/README.md` and `models/README.md` for local artifact notes.
 
 ## Outputs
 
