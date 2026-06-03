@@ -40,7 +40,7 @@ def main() -> None:
 def build_app() -> gr.Blocks:
     """Build the Gradio interface."""
     with gr.Blocks(
-        title="Speech Emotion Recognition",
+        title="Multimodal Speech Emotion Recognition",
         css=_custom_css(),
         theme=gr.themes.Soft(
             primary_hue="teal",
@@ -65,10 +65,11 @@ def build_app() -> gr.Blocks:
                 transcript = gr.Textbox(
                     label="Optional transcript",
                     show_label=False,
+                    placeholder="Add a transcript to enable multimodal prediction, or leave it blank for audio-only prediction.",
                     lines=4,
                 )
                 predict_button = gr.Button(
-                    "Predict emotion",
+                    "Predict Emotion",
                     variant="primary",
                     size="lg",
                     elem_classes="predict-button",
@@ -317,8 +318,6 @@ def _empty_scores_html() -> str:
     """Render the empty label distribution card."""
     return """
     <div class="score-card">
-        <p class="eyebrow">Label distribution</p>
-        <p class="muted-text">Run a prediction to compare the four emotion labels.</p>
     </div>
     """
 
