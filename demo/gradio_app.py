@@ -586,12 +586,12 @@ def _custom_css() -> str:
     .speech-audio .upload-container,
     .speech-audio .dropzone,
     .speech-audio .input-container {
-        min-height: 260px !important;
+        min-height: 180px !important;
     }
 
     .speech-audio .wrap,
     .speech-audio .container {
-        min-height: 260px !important;
+        min-height: 180px !important;
     }
 
     .recognition-card button {
@@ -600,9 +600,7 @@ def _custom_css() -> str:
     }
 
     .recognition-card .predict-button,
-    .recognition-card .predict-button button,
-    .recognition-card button.primary,
-    .recognition-card button[variant="primary"] {
+    .recognition-card .predict-button button {
         background: #000000 !important;
         background-color: #000000 !important;
         border-color: #000000 !important;
@@ -610,13 +608,25 @@ def _custom_css() -> str:
     }
 
     .recognition-card .predict-button:hover,
-    .recognition-card .predict-button button:hover,
-    .recognition-card button.primary:hover,
-    .recognition-card button[variant="primary"]:hover {
+    .recognition-card .predict-button button:hover {
         background: #000000 !important;
         background-color: #000000 !important;
         border-color: #000000 !important;
         color: #ffffff !important;
+    }
+
+    .speech-audio button {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #111827 !important;
+    }
+
+    .speech-audio button:hover {
+        background: #f8fafc !important;
+        background-color: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #003576 !important;
     }
 
     .processing-status {
