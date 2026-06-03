@@ -74,15 +74,14 @@ def build_app() -> gr.Blocks:
                 elem_classes="predict-button",
             )
             processing_status = gr.HTML("")
-            label_scores = gr.HTML(_empty_scores_html())
-            result_card = gr.HTML(_empty_result_html())
+            prediction_panel = gr.HTML(_prediction_panel_html(_empty_result_html(), _empty_scores_html()))
 
         gr.HTML(_footer_html())
 
         predict_button.click(
             fn=_predict,
             inputs=[audio, transcript],
-            outputs=[processing_status, label_scores, result_card],
+            outputs=[processing_status, prediction_panel],
             api_name=False,
             preprocess=False,
             show_progress="hidden",
@@ -100,16 +99,18 @@ def _get_predictor(config: RuntimeConfig) -> DemoEmotionPredictor:
 def _predict(
     audio_input: Any,
     transcript: str,
-) -> Iterator[tuple[str, str, str]]:
+) -> Iterator[tuple[str, str]]:
     """Run one prediction from Gradio inputs."""
     audio_path = _audio_path_from_input(audio_input)
     if not audio_path:
         yield (
             "",
-            _empty_scores_html(),
-            _message_result_html(
-                title="Upload audio first",
-                message="Add an audio file or record a short speech sample, then run prediction.",
+            _prediction_panel_html(
+                _message_result_html(
+                    title="Upload audio first",
+                    message="Add an audio file or record a short speech sample, then run prediction.",
+                ),
+                _empty_scores_html(),
             ),
         )
         return
@@ -124,8 +125,7 @@ def _predict(
                 title="Preparing audio",
                 detail="Reading the uploaded speech sample.",
             ),
-            _empty_scores_html(),
-            _empty_result_html(),
+            _prediction_panel_html(_empty_result_html(), _empty_scores_html()),
         )
 
         with ThreadPoolExecutor(max_workers=1) as executor:
@@ -138,8 +138,7 @@ def _predict(
                         title=_progress_title(percent),
                         detail=_progress_detail(percent),
                     ),
-                    _empty_scores_html(),
-                    _empty_result_html(),
+                    _prediction_panel_html(_empty_result_html(), _empty_scores_html()),
                 )
                 time.sleep(0.45)
                 percent = _next_progress_percent(percent)
@@ -153,10 +152,12 @@ def _predict(
                 detail="Check the audio file and local model artifacts.",
                 state="error",
             ),
-            _empty_scores_html(),
-            _message_result_html(
-                title="Prediction failed",
-                message=str(exc),
+            _prediction_panel_html(
+                _message_result_html(
+                    title="Prediction failed",
+                    message=str(exc),
+                ),
+                _empty_scores_html(),
             ),
         )
         return
@@ -168,8 +169,10 @@ def _predict(
             detail="Prediction ready.",
             state="complete",
         ),
-        _scores_html(prediction.label_scores or {}),
-        _result_html(prediction),
+        _prediction_panel_html(
+            _result_html(prediction),
+            _scores_html(prediction.label_scores or {}),
+        ),
     )
 
 
@@ -296,9 +299,19 @@ def _footer_html() -> str:
 def _empty_result_html() -> str:
     """Render the initial prediction card."""
     return """
-    <section class="result-card empty-result">
+    <div class="result-card empty-result">
         <p class="eyebrow">Prediction</p>
         <h2>Pending</h2>
+    </div>
+    """
+
+
+def _prediction_panel_html(result_html: str, scores_html: str) -> str:
+    """Render prediction and label distribution as one visual panel."""
+    return f"""
+    <section class="prediction-panel">
+        {result_html}
+        {scores_html}
     </section>
     """
 
@@ -306,10 +319,10 @@ def _empty_result_html() -> str:
 def _empty_scores_html() -> str:
     """Render the empty label distribution card."""
     return """
-    <section class="score-card">
+    <div class="score-card">
         <p class="eyebrow">Label distribution</p>
         <p class="muted-text">Run a prediction to compare the four emotion labels.</p>
-    </section>
+    </div>
     """
 
 
@@ -336,11 +349,11 @@ def _processing_status_html(percent: int, title: str, detail: str, state: str = 
 def _message_result_html(title: str, message: str) -> str:
     """Render a friendly message in the prediction card."""
     return f"""
-    <section class="result-card message-result">
+    <div class="result-card message-result">
         <p class="eyebrow">Prediction</p>
         <h2>{escape(title)}</h2>
         <p class="subtitle">{escape(message)}</p>
-    </section>
+    </div>
     """
 
 
@@ -350,7 +363,7 @@ def _result_html(prediction) -> str:
     confidence = "Not available" if prediction.confidence is None else f"{prediction.confidence:.2%}"
     transcript_mode = "Audio + transcript" if prediction.transcript_used else "Audio only"
     return f"""
-    <section class="result-card" style="border-left-color: {color};">
+    <div class="result-card" style="border-left-color: {color};">
         <p class="eyebrow">Prediction</p>
         <div class="result-row">
             <div>
@@ -362,7 +375,7 @@ def _result_html(prediction) -> str:
                 <strong>{confidence}</strong>
             </div>
         </div>
-    </section>
+    </div>
     """
 
 
@@ -389,10 +402,10 @@ def _scores_html(label_scores: dict[str, float]) -> str:
         )
 
     return f"""
-    <section class="score-card">
+    <div class="score-card">
         <p class="eyebrow">Label distribution</p>
         {''.join(rows)}
-    </section>
+    </div>
     """
 
 
@@ -695,20 +708,30 @@ def _custom_css() -> str:
         background: #ef4444;
     }
 
-    .result-card {
+    .prediction-panel {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid #dde3eb;
         border-left: 6px solid #003576;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
         margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .result-card {
+        background: transparent;
+        border: 0;
+        border-left: 0 solid transparent;
+        border-radius: 0;
+        box-shadow: none;
+        margin-top: 0;
         min-height: 190px;
         padding: 1.35rem 1.45rem;
     }
 
     .empty-result {
         align-content: center;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.86) 100%);
+        background: transparent;
         border-left-color: #94a3b8;
     }
 
@@ -751,12 +774,10 @@ def _custom_css() -> str:
     }
 
     .score-card {
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid #dde3eb;
-        border-radius: 8px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
-        margin-top: 0.85rem;
-        padding: 1rem 1.05rem 0.9rem;
+        background: rgba(248, 250, 252, 0.72);
+        border-top: 1px solid #dde3eb;
+        margin-top: 0;
+        padding: 1rem 1.45rem 1.05rem;
     }
 
     .muted-text {
