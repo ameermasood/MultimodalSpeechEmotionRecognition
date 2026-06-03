@@ -52,27 +52,28 @@ def build_app() -> gr.Blocks:
 
         with gr.Group(elem_classes="recognition-card"):
             gr.HTML(_card_intro_html())
-            gr.HTML('<p class="field-label">Upload or record speech</p>')
-            audio = gr.Audio(
-                label="Upload or record speech",
-                show_label=False,
-                type="filepath",
-                sources=["upload", "microphone"],
-                elem_classes="speech-audio",
-            )
-            gr.HTML('<p class="field-label">Optional transcript</p>')
-            transcript = gr.Textbox(
-                label="Optional transcript",
-                show_label=False,
-                placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
-                lines=4,
-            )
-            predict_button = gr.Button(
-                "Predict emotion",
-                variant="primary",
-                size="lg",
-                elem_classes="predict-button",
-            )
+            with gr.Group(elem_classes="input-panel"):
+                gr.HTML('<p class="field-label">Upload or record speech</p>')
+                audio = gr.Audio(
+                    label="Upload or record speech",
+                    show_label=False,
+                    type="filepath",
+                    sources=["upload", "microphone"],
+                    elem_classes="speech-audio",
+                )
+                gr.HTML('<p class="field-label">Optional transcript</p>')
+                transcript = gr.Textbox(
+                    label="Optional transcript",
+                    show_label=False,
+                    placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
+                    lines=4,
+                )
+                predict_button = gr.Button(
+                    "Predict emotion",
+                    variant="primary",
+                    size="lg",
+                    elem_classes="predict-button",
+                )
             processing_status = gr.HTML("")
             prediction_panel = gr.HTML(_prediction_panel_html(_empty_result_html(), _empty_scores_html()))
 
@@ -163,12 +164,7 @@ def _predict(
         return
 
     yield (
-        _processing_status_html(
-            percent=100,
-            title="Complete",
-            detail="Prediction ready.",
-            state="complete",
-        ),
+        "",
         _prediction_panel_html(
             _result_html(prediction),
             _scores_html(prediction.label_scores or {}),
@@ -544,11 +540,12 @@ def _custom_css() -> str:
     }
 
     .card-intro {
-        align-items: flex-end;
+        align-items: center;
         display: flex;
         gap: 1.5rem;
-        justify-content: space-between;
+        justify-content: center;
         margin-bottom: 0.65rem;
+        text-align: center;
     }
 
     .card-intro h2 {
@@ -564,6 +561,27 @@ def _custom_css() -> str:
         line-height: 1.45;
         margin: 0;
         max-width: 460px;
+    }
+
+    .input-panel {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #dde3eb !important;
+        border-left: 6px solid #003576 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06) !important;
+        margin-top: 0.85rem;
+        overflow: hidden;
+        padding: 1.15rem 1.25rem !important;
+    }
+
+    .input-panel,
+    .input-panel > div,
+    .input-panel .form,
+    .input-panel .wrap,
+    .input-panel .block,
+    .input-panel .panel,
+    .input-panel .contain {
+        background: rgba(255, 255, 255, 0.9) !important;
     }
 
     .field-label {
@@ -599,12 +617,30 @@ def _custom_css() -> str:
     .speech-audio .upload-container,
     .speech-audio .dropzone,
     .speech-audio .input-container {
-        min-height: 180px !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #111827 !important;
+        min-height: 140px !important;
     }
 
     .speech-audio .wrap,
-    .speech-audio .container {
-        min-height: 180px !important;
+    .speech-audio .container,
+    .speech-audio .block,
+    .speech-audio .panel,
+    .speech-audio .contain,
+    .speech-audio .form {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #111827 !important;
+        min-height: 140px !important;
+    }
+
+    .speech-audio,
+    .speech-audio > div {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #111827 !important;
     }
 
     .recognition-card button {
@@ -628,18 +664,25 @@ def _custom_css() -> str:
         color: #ffffff !important;
     }
 
-    .speech-audio button {
+    .speech-audio button,
+    .speech-audio select {
         background: #ffffff !important;
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
         color: #111827 !important;
     }
 
-    .speech-audio button:hover {
+    .speech-audio button:hover,
+    .speech-audio select:hover {
         background: #f8fafc !important;
         background-color: #f8fafc !important;
         border-color: #94a3b8 !important;
         color: #003576 !important;
+    }
+
+    .speech-audio button *,
+    .speech-audio select * {
+        color: inherit !important;
     }
 
     .processing-status {
