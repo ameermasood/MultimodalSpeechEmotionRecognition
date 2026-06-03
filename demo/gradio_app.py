@@ -168,6 +168,7 @@ def _predict(
         _prediction_panel_html(
             _result_html(prediction),
             _scores_html(prediction.label_scores or {}),
+            accent_color=EMOTION_COLORS.get(prediction.label, EMOTION_COLORS["Unknown"]),
         ),
     )
 
@@ -249,7 +250,7 @@ def _header_html() -> str:
             {logo_html}
         </div>
         <div class="hero-copy">
-            <h1>Multimodal Speech Emotion Recognition</h1>
+            <h1>Speech Emotion Recognition System</h1>
             <p class="subtitle">
                 Upload speech audio, optionally add transcript, and predict emotion.
             </p>
@@ -302,10 +303,11 @@ def _empty_result_html() -> str:
     """
 
 
-def _prediction_panel_html(result_html: str, scores_html: str) -> str:
+def _prediction_panel_html(result_html: str, scores_html: str, accent_color: str | None = None) -> str:
     """Render prediction and label distribution as one visual panel."""
+    accent_style = f' style="border-color: {accent_color};"' if accent_color else ""
     return f"""
-    <section class="prediction-panel">
+    <section class="prediction-panel"{accent_style}>
         {result_html}
         {scores_html}
     </section>
@@ -359,7 +361,7 @@ def _result_html(prediction) -> str:
     confidence = "Not available" if prediction.confidence is None else f"{prediction.confidence:.2%}"
     transcript_mode = "Audio + transcript" if prediction.transcript_used else "Audio only"
     return f"""
-    <div class="result-card" style="border-left-color: {color};">
+    <div class="result-card">
         <p class="eyebrow">Prediction</p>
         <div class="result-row">
             <div>
@@ -457,8 +459,8 @@ def _custom_css() -> str:
         background: transparent;
         border-radius: 8px;
         margin: 0 auto;
-        max-width: 1160px;
-        padding: 0.65rem 8.5rem;
+        max-width: 1200px;
+        padding: 0.65rem 7rem;
         position: relative;
         text-align: center;
         z-index: 2;
@@ -475,7 +477,7 @@ def _custom_css() -> str:
 
     .hero h1 {
         color: #111827;
-        font-size: clamp(2.35rem, 4.1vw, 3.75rem);
+        font-size: clamp(2.15rem, 4vw, 3.55rem);
         line-height: 1.05;
         margin: 0;
         max-width: 100%;
@@ -566,7 +568,6 @@ def _custom_css() -> str:
     .input-panel {
         background: rgba(255, 255, 255, 0.9) !important;
         border: 1px solid #dde3eb !important;
-        border-left: 6px solid #003576 !important;
         border-radius: 8px !important;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06) !important;
         margin-top: 0.85rem;
@@ -754,7 +755,6 @@ def _custom_css() -> str:
     .prediction-panel {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid #dde3eb;
-        border-left: 6px solid #003576;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
         margin-top: 1rem;
