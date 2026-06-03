@@ -65,7 +65,6 @@ def build_app() -> gr.Blocks:
                 transcript = gr.Textbox(
                     label="Optional transcript",
                     show_label=False,
-                    placeholder="Paste the spoken sentence here if you want audio + transcript prediction.",
                     lines=4,
                 )
                 predict_button = gr.Button(
@@ -250,9 +249,9 @@ def _header_html() -> str:
             {logo_html}
         </div>
         <div class="hero-copy">
-            <h1>Speech Emotion Recognition System</h1>
+            <h1>MultimodalSpeech Emotion Recognition</h1>
             <p class="subtitle">
-                Upload speech audio, optionally add transcript, and predict emotion.
+                Upload or record speech, add a transcript if available, and predict the speaker’s emotion.
             </p>
         </div>
     </header>
@@ -442,14 +441,14 @@ def _custom_css() -> str:
     left: 50%;
     top: 1rem;
     transform: translateX(-50%);
-    width: 200px;
+    width: 150px;
 }
 
     .polito-logo {
         display: block;
         height: auto;
-        max-height: 300px;
-        max-width: 300px;
+        max-height: 250px;
+        max-width: 250px;
         object-fit: contain;
         opacity: 0.2;
         width: 100%;
@@ -459,8 +458,8 @@ def _custom_css() -> str:
         background: transparent;
         border-radius: 8px;
         margin: 0 auto;
-        max-width: 1200px;
-        padding: 0.65rem 7rem;
+        max-width: 100%;
+        padding: 0.65rem 1rem;
         position: relative;
         text-align: center;
         z-index: 2;
@@ -477,7 +476,7 @@ def _custom_css() -> str:
 
     .hero h1 {
         color: #111827;
-        font-size: clamp(2.15rem, 4vw, 3.55rem);
+        font-size: clamp(2.15rem, 3.35vw, 3.2rem);
         line-height: 1.05;
         margin: 0;
         max-width: 100%;
@@ -770,6 +769,10 @@ def _custom_css() -> str:
         margin-top: 0;
         min-height: 190px;
         padding: 1.35rem 1.45rem;
+    }
+
+    .result-card .eyebrow {
+        color: #003576;
     }
 
     .empty-result {
