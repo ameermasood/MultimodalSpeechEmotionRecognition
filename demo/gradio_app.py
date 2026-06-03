@@ -21,7 +21,6 @@ from mer.inference import DemoEmotionPredictor
 DEFAULT_BASE_MODEL = "mistralai/Voxtral-Mini-3B-2507"
 DEFAULT_ADAPTER_PATH = "checkpoints/final_adapter_dora"
 GITHUB_URL = "https://github.com/ameermasood/MultimodalSpeechEmotionRecognition"
-POLITO_LOGO_PATH = Path(__file__).resolve().parent / "assets" / "polito_logo.png"
 EMOTION_COLORS = {
     "Angry": "#c2410c",
     "Happy": "#047857",
