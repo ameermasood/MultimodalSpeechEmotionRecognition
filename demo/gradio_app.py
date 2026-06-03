@@ -621,7 +621,7 @@ def _custom_css() -> str:
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
         color: #111827 !important;
-        min-height: 140px !important;
+        min-height: 160px !important;
     }
 
     .speech-audio .wrap,
@@ -633,7 +633,7 @@ def _custom_css() -> str:
         background: transparent !important;
         background-color: transparent !important;
         color: #111827 !important;
-        min-height: 140px !important;
+        min-height: 160px !important;
     }
 
     .speech-audio,
