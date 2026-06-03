@@ -58,6 +58,7 @@ def build_app() -> gr.Blocks:
                 show_label=False,
                 type="filepath",
                 sources=["upload", "microphone"],
+                elem_classes="speech-audio",
             )
             gr.HTML('<p class="field-label">Optional transcript</p>')
             transcript = gr.Textbox(
@@ -580,6 +581,17 @@ def _custom_css() -> str:
         background: rgba(255, 255, 255, 0.72) !important;
         border-color: rgba(196, 205, 218, 0.9) !important;
         color: #303743 !important;
+    }
+
+    .speech-audio .upload-container,
+    .speech-audio .dropzone,
+    .speech-audio .input-container {
+        min-height: 260px !important;
+    }
+
+    .speech-audio .wrap,
+    .speech-audio .container {
+        min-height: 260px !important;
     }
 
     .recognition-card button {
