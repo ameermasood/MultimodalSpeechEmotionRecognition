@@ -20,6 +20,7 @@ from mer.inference import DemoEmotionPredictor
 
 DEFAULT_BASE_MODEL = "mistralai/Voxtral-Mini-3B-2507"
 DEFAULT_ADAPTER_PATH = "checkpoints/final_adapter_dora"
+POLITO_LOGO_PATH = Path(__file__).parent.parent.parent / "assets" / "polito_logo.png"
 GITHUB_URL = "https://github.com/ameermasood/MultimodalSpeechEmotionRecognition"
 EMOTION_COLORS = {
     "Angry": "#c2410c",
@@ -252,7 +253,7 @@ def _header_html() -> str:
         <div class="hero-copy">
             <h1>Multimodal Speech Emotion Recognition</h1>
             <p class="subtitle">
-                Upload or record speech, add a transcript if available, and predict the speaker’s emotion.
+                Upload or Record Speech, Add a Transcript If Available, and Predict the Speaker’s Emotion
             </p>
         </div>
     </header>
@@ -421,7 +422,7 @@ def _custom_css() -> str:
         margin: 0 !important;
         max-width: none !important;
         min-height: 100vh !important;
-        padding: 10px 32px 28px !important;
+        padding: 8px 28px 20px !important;
         width: 100% !important;
     }
 
@@ -429,16 +430,16 @@ def _custom_css() -> str:
         align-items: center;
         display: flex;
         justify-content: center;
-        min-height: 170px;
+        min-height: 132px;
         overflow: visible;
-        padding: 0.85rem 1rem 0.95rem;
+        padding: 0.45rem 1rem 0.55rem;
         position: relative;
     }
 
     .hero-brand {
     position: absolute;
     left: 50%;
-    top: 1rem;
+    top: 0.35rem;
     transform: translateX(-50%);
     width: 150px;
 }
@@ -475,7 +476,7 @@ def _custom_css() -> str:
 
     .hero h1 {
         color: #111827;
-        font-size: clamp(2.15rem, 3.35vw, 3.2rem);
+        font-size: clamp(2rem, 3.2vw, 3rem);
         line-height: 1.05;
         margin: 0;
         max-width: 100%;
@@ -485,9 +486,9 @@ def _custom_css() -> str:
 
     .subtitle {
         color: #646b78;
-        font-size: 1rem;
-        line-height: 1.55;
-        margin: 0.65rem auto 0;
+        font-size: 0.94rem;
+        line-height: 1.4;
+        margin: 0.45rem auto 0;
         max-width: 720px;
     }
 
@@ -515,8 +516,8 @@ def _custom_css() -> str:
         border: 1px solid rgba(214, 219, 226, 0.92) !important;
         border-radius: 8px !important;
         box-shadow: 0 20px 52px rgba(30, 41, 59, 0.1) !important;
-        margin-bottom: 1rem;
-        padding: 1rem !important;
+        margin-bottom: 0.7rem;
+        padding: 0.85rem !important;
     }
 
     .recognition-card,
@@ -544,13 +545,13 @@ def _custom_css() -> str:
         display: flex;
         gap: 1.5rem;
         justify-content: center;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.45rem;
         text-align: center;
     }
 
     .card-intro h2 {
         color: #22242a;
-        font-size: 1.28rem;
+        font-size: 1.12rem;
         line-height: 1.2;
         margin: 0;
     }
@@ -568,9 +569,9 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb !important;
         border-radius: 8px !important;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06) !important;
-        margin-top: 0.85rem;
+        margin-top: 0.6rem;
         overflow: hidden;
-        padding: 1.15rem 1.25rem !important;
+        padding: 0.85rem 1rem !important;
     }
 
     .input-panel,
@@ -585,10 +586,10 @@ def _custom_css() -> str:
 
     .field-label {
         color: #003576;
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         font-weight: 750;
         letter-spacing: 0;
-        margin: 0 0 0.35rem;
+        margin: 0 0 0.25rem;
         text-transform: uppercase;
     }
 
@@ -612,7 +613,7 @@ def _custom_css() -> str:
     .transcript-input:has(textarea:placeholder-shown:not(:focus))::after {
         color: #111827;
         content: "Add Transcript\\A - or -\\A Leave Blank";
-        font-size: 1rem;
+        font-size: 0.92rem;
         font-weight: 750;
         left: 50%;
         line-height: 1.45;
@@ -640,7 +641,7 @@ def _custom_css() -> str:
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
         color: #111827 !important;
-        min-height: 160px !important;
+        min-height: 145px !important;
     }
 
     .speech-audio .wrap,
@@ -652,7 +653,7 @@ def _custom_css() -> str:
         background: transparent !important;
         background-color: transparent !important;
         color: #111827 !important;
-        min-height: 160px !important;
+        min-height: 145px !important;
     }
 
     .speech-audio,
@@ -709,8 +710,8 @@ def _custom_css() -> str:
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
-        margin-top: 0.9rem;
-        padding: 0.95rem 1rem;
+        margin-top: 0.65rem;
+        padding: 0.7rem 0.85rem;
     }
 
     .processing-row {
@@ -751,7 +752,7 @@ def _custom_css() -> str:
         background: #e5e7eb;
         border-radius: 999px;
         height: 0.55rem;
-        margin-top: 0.8rem;
+        margin-top: 0.55rem;
         overflow: hidden;
     }
 
@@ -775,7 +776,7 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
-        margin-top: 1rem;
+        margin-top: 0.7rem;
         overflow: hidden;
     }
 
@@ -786,8 +787,8 @@ def _custom_css() -> str:
         border-radius: 0;
         box-shadow: none;
         margin-top: 0;
-        min-height: 190px;
-        padding: 1.35rem 1.45rem;
+        min-height: 135px;
+        padding: 1rem 1.15rem;
     }
 
     .result-card .eyebrow {
@@ -810,7 +811,7 @@ def _custom_css() -> str:
     .result-row h2,
     .empty-result h2 {
         color: #22242a;
-        font-size: 2.7rem;
+        font-size: 2.25rem;
         line-height: 1;
         margin: 0;
     }
@@ -820,7 +821,7 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb;
         border-radius: 8px;
         min-width: 160px;
-        padding: 0.8rem 0.95rem;
+        padding: 0.65rem 0.8rem;
         text-align: right;
     }
 
@@ -842,7 +843,7 @@ def _custom_css() -> str:
         background: rgba(248, 250, 252, 0.72);
         border-top: 1px solid #dde3eb;
         margin-top: 0;
-        padding: 1rem 1.45rem 1.05rem;
+        padding: 0.75rem 1.15rem 0.8rem;
     }
 
     .muted-text {
@@ -853,7 +854,7 @@ def _custom_css() -> str:
     }
 
     .score-row {
-        margin-top: 0.75rem;
+        margin-top: 0.55rem;
     }
 
     .score-label {
@@ -892,14 +893,15 @@ def _custom_css() -> str:
         font-size: 0.88rem;
         gap: 0.25rem;
         justify-content: center;
-        margin: 1.4rem 0 0;
-        padding: 1rem 0 0;
+        margin: 0.9rem 0 0;
+        padding: 0.75rem 0 0;
         text-align: center;
     }
 
     .footer-main {
         color: #111827;
         font-weight: 500;
+        opacity: 0.30;
     }
 
     .footer-main strong {
@@ -918,6 +920,7 @@ def _custom_css() -> str:
         flex-wrap: wrap;
         gap: 0.45rem;
         justify-content: center;
+        opacity: 0.58;
     }
 
     .project-footer a {
