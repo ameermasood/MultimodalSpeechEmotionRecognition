@@ -65,8 +65,9 @@ def build_app() -> gr.Blocks:
                 transcript = gr.Textbox(
                     label="Optional transcript",
                     show_label=False,
-                    placeholder="Add a transcript to enable multimodal prediction, or leave it blank for audio-only prediction.",
+                    placeholder=" ",
                     lines=4,
+                    elem_classes="transcript-input",
                 )
                 predict_button = gr.Button(
                     "Predict Emotion",
@@ -603,6 +604,26 @@ def _custom_css() -> str:
     .recognition-card input::placeholder {
         color: #7b8492 !important;
         opacity: 1 !important;
+    }
+
+    .transcript-input {
+        position: relative;
+    }
+
+    .transcript-input:has(textarea:placeholder-shown:not(:focus))::after {
+        color: #111827;
+        content: "Add Transcript\\A - or -\\A Leave Blank";
+        font-size: 1rem;
+        font-weight: 750;
+        left: 50%;
+        line-height: 1.45;
+        pointer-events: none;
+        position: absolute;
+        text-align: center;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        white-space: pre;
+        z-index: 4;
     }
 
     .recognition-card .upload-container,
