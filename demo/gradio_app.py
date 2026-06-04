@@ -53,22 +53,25 @@ def build_app() -> gr.Blocks:
         with gr.Group(elem_classes="recognition-card"):
             gr.HTML(_card_intro_html())
             with gr.Group(elem_classes="input-panel"):
-                gr.HTML('<p class="field-label">Upload or record speech</p>')
-                audio = gr.Audio(
-                    label="Upload or record speech",
-                    show_label=False,
-                    type="filepath",
-                    sources=["upload", "microphone"],
-                    elem_classes="speech-audio",
-                )
-                gr.HTML('<p class="field-label">Optional transcript</p>')
-                transcript = gr.Textbox(
-                    label="Optional transcript",
-                    show_label=False,
-                    placeholder=" ",
-                    lines=4,
-                    elem_classes="transcript-input",
-                )
+                with gr.Row(elem_classes="input-grid"):
+                    with gr.Column(scale=1, min_width=320):
+                        gr.HTML('<p class="field-label">Upload speech audio</p>')
+                        audio = gr.Audio(
+                            label="Upload speech audio",
+                            show_label=False,
+                            type="filepath",
+                            sources=["upload"],
+                            elem_classes="speech-audio",
+                        )
+                    with gr.Column(scale=1, min_width=320):
+                        gr.HTML('<p class="field-label">Optional transcript</p>')
+                        transcript = gr.Textbox(
+                            label="Optional transcript",
+                            show_label=False,
+                            placeholder=" ",
+                            lines=5,
+                            elem_classes="transcript-input",
+                        )
                 predict_button = gr.Button(
                     "Predict Emotion",
                     variant="primary",
@@ -317,10 +320,7 @@ def _prediction_panel_html(result_html: str, scores_html: str, accent_color: str
 
 def _empty_scores_html() -> str:
     """Render the empty label distribution card."""
-    return """
-    <div class="score-card">
-    </div>
-    """
+    return ""
 
 
 def _processing_status_html(percent: int, title: str, detail: str, state: str = "active") -> str:
@@ -584,6 +584,11 @@ def _custom_css() -> str:
         background: rgba(255, 255, 255, 0.9) !important;
     }
 
+    .input-grid {
+        align-items: stretch;
+        gap: 1rem;
+    }
+
     .field-label {
         color: #003576;
         font-size: 0.74rem;
@@ -610,17 +615,28 @@ def _custom_css() -> str:
         position: relative;
     }
 
+    .transcript-input textarea {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        border-radius: 14px !important;
+        box-shadow: none !important;
+        color: #111827 !important;
+        min-height: 185px !important;
+        resize: none !important;
+    }
+
     .transcript-input:has(textarea:placeholder-shown:not(:focus))::after {
         color: #111827;
         content: "Add Transcript\\A - or -\\A Leave Blank";
-        font-size: 0.92rem;
+        font-size: 1rem;
         font-weight: 750;
         left: 50%;
         line-height: 1.45;
         pointer-events: none;
         position: absolute;
         text-align: center;
-        top: 50%;
+        top: 40%;
         transform: translate(-50%, -50%);
         white-space: pre;
         z-index: 4;
@@ -640,8 +656,9 @@ def _custom_css() -> str:
         background: #ffffff !important;
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
+        border-radius: 14px !important;
         color: #111827 !important;
-        min-height: 145px !important;
+        min-height: 185px !important;
     }
 
     .speech-audio .wrap,
@@ -652,15 +669,46 @@ def _custom_css() -> str:
     .speech-audio .form {
         background: transparent !important;
         background-color: transparent !important;
+        border-radius: 14px !important;
         color: #111827 !important;
-        min-height: 145px !important;
+        min-height: 185px !important;
     }
 
     .speech-audio,
     .speech-audio > div {
         background: transparent !important;
         background-color: transparent !important;
+        border-radius: 14px !important;
         color: #111827 !important;
+    }
+
+    .speech-audio .icon-wrap {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .speech-audio .wrap {
+        align-items: center !important;
+        display: flex !important;
+        justify-content: center !important;
+        line-height: 1.45 !important;
+        padding-top: 0 !important;
+        text-align: center !important;
+    }
+
+    .speech-audio .wrap h2,
+    .speech-audio .wrap p {
+        line-height: 1.45 !important;
+        margin: 0 !important;
+    }
+
+    .speech-audio hr,
+    .speech-audio .divider,
+    .speech-audio [role="separator"],
+    .speech-audio [data-testid="source-select"],
+    .speech-audio .source-selection {
+        display: none !important;
+        visibility: hidden !important;
     }
 
     .recognition-card button {
@@ -974,6 +1022,10 @@ def _custom_css() -> str:
 
         .gradio-container {
             padding: 10px 16px 26px !important;
+        }
+
+        .input-grid {
+            flex-direction: column;
         }
 
         .metric-block {
