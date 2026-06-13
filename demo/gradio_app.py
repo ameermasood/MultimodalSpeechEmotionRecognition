@@ -73,7 +73,7 @@ def build_app() -> gr.Blocks:
                             elem_classes="transcript-input",
                         )
                 predict_button = gr.Button(
-                    "Predict Emotion",
+                    "PREDICT EMOTION",
                     variant="primary",
                     size="lg",
                     elem_classes="predict-button",
@@ -993,10 +993,11 @@ def _custom_css() -> str:
     }
 
     .page-polito-mark {
-        bottom: -150px;
+        left: 50%;
         pointer-events: none;
         position: fixed;
-        right: -130px;
+        top: 91.5%;
+        transform: translate(-50%, -50%);
         z-index: 55;
     }
 
@@ -1004,7 +1005,6 @@ def _custom_css() -> str:
         display: block;
         height: auto;
         opacity: 0.10;
-        transform: rotate(-45deg);
         width: 450px;
     }
 
