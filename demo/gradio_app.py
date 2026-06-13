@@ -296,7 +296,8 @@ def _footer_html() -> str:
     return f"""
     <footer class="project-footer">
         <div class="footer-main">
-            <a href="{GITHUB_URL}" target="_blank" rel="noopener noreferrer">GitHub</a> | Demo Developed by <span>Amir Masoud Almasi</span> | Supervised by <span>Politecnico di Torino</span> and <span>LINKS Foundation</span>
+            Demo Developed by <span>Amir Masoud Almasi</span> in Collaboration with <span>Politecnico di Torino</span> × <span>LINKS Foundation</span> <br>
+            <a href="{GITHUB_URL}" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
         <div class="footer-meta">
             <span aria-hidden="true"></span>
@@ -465,7 +466,7 @@ def _custom_css() -> str:
         max-height: 250px;
         max-width: 250px;
         object-fit: contain;
-        opacity: 0.2;
+        opacity: 0.3;
         width: 100%;
     }
 
@@ -997,7 +998,7 @@ def _custom_css() -> str:
         left: 50%;
         pointer-events: none;
         position: fixed;
-        top: 21.5%;
+        top: 91.5%;
         transform: translate(-50%, -50%);
         z-index: 55;
     }
@@ -1018,7 +1019,7 @@ def _custom_css() -> str:
         color: #64748b;
         display: flex;
         flex-direction: column;
-        font-size: 0.88rem;
+        font-size: 1rem;
         gap: 0.25rem;
         justify-content: center;
         left: 0;
