@@ -429,6 +429,7 @@ def _custom_css() -> str:
     }
 
     .gradio-container {
+        --polito-navy: #003576;
         display: flex !important;
         flex-direction: column !important;
         margin: 0 !important;
@@ -488,7 +489,7 @@ def _custom_css() -> str:
     }
 
     .hero h1 {
-        color: #111827;
+        color: var(--polito-navy);
         font-size: clamp(2rem, 3.1vw, 2.9rem);
         line-height: 1.05;
         margin: 0;
@@ -538,7 +539,7 @@ def _custom_css() -> str:
 
     .recognition-card,
     .recognition-card * {
-        color: #22242a;
+        color: var(--polito-navy);
     }
 
     .recognition-card > div,
@@ -577,7 +578,7 @@ def _custom_css() -> str:
     }
 
     .card-intro h2 {
-        color: #22242a;
+        color: var(--polito-navy);
         font-size: 1.12rem;
         line-height: 1.2;
         margin: 0;
@@ -641,7 +642,7 @@ def _custom_css() -> str:
     .recognition-card input {
         background: rgba(255, 255, 255, 0.86) !important;
         border-color: rgba(211, 218, 228, 0.95) !important;
-        color: #22242a !important;
+        color: var(--polito-navy) !important;
     }
 
     .recognition-card textarea::placeholder,
@@ -660,13 +661,13 @@ def _custom_css() -> str:
         border-color: #cbd5e1 !important;
         border-radius: 14px !important;
         box-shadow: none !important;
-        color: #111827 !important;
+        color: var(--polito-navy) !important;
         min-height: 165px !important;
         resize: none !important;
     }
 
     .transcript-input:has(textarea:placeholder-shown:not(:focus))::after {
-        color: #111827;
+        color: var(--polito-navy);
         content: "Add Transcript\\A - or -\\A Leave Blank";
         font-size: 1rem;
         font-weight: 750;
@@ -696,7 +697,7 @@ def _custom_css() -> str:
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
         border-radius: 14px !important;
-        color: #111827 !important;
+        color: var(--polito-navy) !important;
         min-height: 165px !important;
     }
 
@@ -709,7 +710,7 @@ def _custom_css() -> str:
         background: transparent !important;
         background-color: transparent !important;
         border-radius: 14px !important;
-        color: #111827 !important;
+        color: var(--polito-navy) !important;
         min-height: 165px !important;
     }
 
@@ -718,7 +719,7 @@ def _custom_css() -> str:
         background: transparent !important;
         background-color: transparent !important;
         border-radius: 14px !important;
-        color: #111827 !important;
+        color: var(--polito-navy) !important;
     }
 
     .speech-audio .icon-wrap {
@@ -757,18 +758,18 @@ def _custom_css() -> str:
 
     .recognition-card .predict-button,
     .recognition-card .predict-button button {
-        background: #000000 !important;
-        background-color: #000000 !important;
-        border-color: #000000 !important;
+        background: var(--polito-navy) !important;
+        background-color: var(--polito-navy) !important;
+        border-color: var(--polito-navy) !important;
         color: #ffffff !important;
         margin-top: 0.52rem !important;
     }
 
     .recognition-card .predict-button:hover,
     .recognition-card .predict-button button:hover {
-        background: #000000 !important;
-        background-color: #000000 !important;
-        border-color: #000000 !important;
+        background: var(--polito-navy) !important;
+        background-color: var(--polito-navy) !important;
+        border-color: var(--polito-navy) !important;
         color: #ffffff !important;
     }
 
@@ -777,7 +778,7 @@ def _custom_css() -> str:
         background: #ffffff !important;
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
-        color: #111827 !important;
+        color: var(--polito-navy) !important;
     }
 
     .speech-audio button:hover,
@@ -815,7 +816,7 @@ def _custom_css() -> str:
     }
 
     .processing-row strong {
-        color: #111827;
+        color: var(--polito-navy);
         display: block;
         font-size: 1rem;
         line-height: 1.25;
@@ -830,7 +831,7 @@ def _custom_css() -> str:
     }
 
     .processing-row b {
-        color: #111827;
+        color: var(--polito-navy);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.95rem;
         white-space: nowrap;
@@ -845,14 +846,14 @@ def _custom_css() -> str:
     }
 
     .processing-fill {
-        background: #111827;
+        background: var(--polito-navy);
         border-radius: 999px;
         height: 100%;
         transition: width 240ms ease;
     }
 
     .processing-complete .processing-fill {
-        background: #111827;
+        background: var(--polito-navy);
     }
 
     .processing-error .processing-fill {
@@ -901,7 +902,7 @@ def _custom_css() -> str:
     }
 
     .prediction-placeholder {
-        color: #111827;
+        color: var(--polito-navy);
         font-size: 1rem;
         font-weight: 750;
         line-height: 1.45;
@@ -917,7 +918,7 @@ def _custom_css() -> str:
 
     .result-row h2,
     .empty-result h2 {
-        color: #22242a;
+        color: var(--polito-navy);
         font-size: 2.15rem;
         line-height: 1;
         margin: 0;
@@ -1029,7 +1030,7 @@ def _custom_css() -> str:
     }
 
     .footer-main {
-        color: #111827;
+        color: var(--polito-navy);
         font-weight: 500;
         opacity: 1;
     }
