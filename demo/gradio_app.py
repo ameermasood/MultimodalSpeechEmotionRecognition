@@ -54,7 +54,7 @@ def build_app() -> gr.Blocks:
             gr.HTML(_card_intro_html())
             with gr.Group(elem_classes="input-panel"):
                 with gr.Row(elem_classes="input-grid"):
-                    with gr.Column(scale=1, min_width=320):
+                    with gr.Column(scale=1, min_width=320, elem_classes=["input-column", "audio-column"]):
                         gr.HTML('<p class="field-label">Upload speech audio</p>')
                         audio = gr.Audio(
                             label="Upload speech audio",
@@ -63,7 +63,7 @@ def build_app() -> gr.Blocks:
                             sources=["upload"],
                             elem_classes="speech-audio",
                         )
-                    with gr.Column(scale=1, min_width=320):
+                    with gr.Column(scale=1, min_width=320, elem_classes=["input-column", "transcript-column"]):
                         gr.HTML('<p class="field-label">Optional transcript</p>')
                         transcript = gr.Textbox(
                             label="Optional transcript",
@@ -589,6 +589,18 @@ def _custom_css() -> str:
         gap: 1rem;
     }
 
+    .input-column {
+        background: rgba(255, 255, 255, 0.82) !important;
+        border: 1px solid #dde3eb !important;
+        border-radius: 14px !important;
+        padding: 0.85rem !important;
+    }
+
+    .input-column,
+    .input-column > div {
+        overflow: hidden;
+    }
+
     .field-label {
         color: #003576;
         font-size: 0.74rem;
@@ -722,6 +734,7 @@ def _custom_css() -> str:
         background-color: #000000 !important;
         border-color: #000000 !important;
         color: #ffffff !important;
+        margin-top: 0.55rem !important;
     }
 
     .recognition-card .predict-button:hover,
