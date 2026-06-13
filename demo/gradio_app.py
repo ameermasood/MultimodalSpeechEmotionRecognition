@@ -419,10 +419,12 @@ def _custom_css() -> str:
     }
 
     .gradio-container {
+        display: flex !important;
+        flex-direction: column !important;
         margin: 0 !important;
         max-width: none !important;
         min-height: 100vh !important;
-        padding: 8px 28px 20px !important;
+        padding: 8px 28px 68px !important;
         width: 100% !important;
     }
 
@@ -430,9 +432,9 @@ def _custom_css() -> str:
         align-items: center;
         display: flex;
         justify-content: center;
-        min-height: 132px;
+        min-height: 110px;
         overflow: visible;
-        padding: 0.45rem 1rem 0.55rem;
+        padding: 0.25rem 1rem 0.25rem;
         position: relative;
     }
 
@@ -459,10 +461,33 @@ def _custom_css() -> str:
         border-radius: 8px;
         margin: 0 auto;
         max-width: 100%;
-        padding: 0.65rem 1rem;
+        padding: 0.35rem 1rem;
         position: relative;
         text-align: center;
         z-index: 2;
+    }
+
+    .hero-copy::before {
+        background:
+            linear-gradient(90deg, transparent 0 3%, rgba(0, 53, 118, 0.16) 3% 3.45%, transparent 3.45% 6%),
+            linear-gradient(90deg, transparent 0 8%, rgba(0, 53, 118, 0.11) 8% 8.45%, transparent 8.45% 12%),
+            linear-gradient(90deg, transparent 0 15%, rgba(0, 53, 118, 0.2) 15% 15.45%, transparent 15.45% 20%),
+            linear-gradient(90deg, transparent 0 28%, rgba(0, 53, 118, 0.12) 28% 28.45%, transparent 28.45% 33%),
+            linear-gradient(90deg, transparent 0 41%, rgba(0, 53, 118, 0.17) 41% 41.45%, transparent 41.45% 48%),
+            linear-gradient(90deg, transparent 0 59%, rgba(0, 53, 118, 0.1) 59% 59.45%, transparent 59.45% 66%),
+            linear-gradient(90deg, transparent 0 74%, rgba(0, 53, 118, 0.18) 74% 74.45%, transparent 74.45% 80%),
+            linear-gradient(90deg, transparent 0 91%, rgba(0, 53, 118, 0.13) 91% 91.45%, transparent 91.45% 100%);
+        border-radius: 999px;
+        content: "";
+        height: 54px;
+        left: 50%;
+        opacity: 0.28;
+        pointer-events: none;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -42%);
+        width: min(860px, 78vw);
+        z-index: -1;
     }
 
     .eyebrow {
@@ -488,7 +513,7 @@ def _custom_css() -> str:
         color: #646b78;
         font-size: 0.94rem;
         line-height: 1.4;
-        margin: 0.45rem auto 0;
+        margin: 0.3rem auto 0;
         max-width: 720px;
     }
 
@@ -947,16 +972,23 @@ def _custom_css() -> str:
 
     .project-footer {
         align-items: center;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(8px);
         border-top: 1px solid #e5e7eb;
+        bottom: 0;
         color: #64748b;
         display: flex;
         flex-direction: column;
         font-size: 0.88rem;
         gap: 0.25rem;
         justify-content: center;
-        margin: 0.9rem 0 0;
-        padding: 0.75rem 0 0;
+        left: 0;
+        margin: 0;
+        padding: 0.7rem 1rem;
+        position: fixed;
+        right: 0;
         text-align: center;
+        z-index: 50;
     }
 
     .footer-main {
@@ -1034,7 +1066,7 @@ def _custom_css() -> str:
         }
 
         .gradio-container {
-            padding: 10px 16px 26px !important;
+            padding: 10px 16px 82px !important;
         }
 
         .input-grid {
