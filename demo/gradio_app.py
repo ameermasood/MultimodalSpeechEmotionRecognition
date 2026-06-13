@@ -424,7 +424,7 @@ def _custom_css() -> str:
         margin: 0 !important;
         max-width: none !important;
         min-height: 100vh !important;
-        padding: 8px 28px 68px !important;
+        padding: 8px 28px 86px !important;
         width: 100% !important;
     }
 
@@ -432,9 +432,9 @@ def _custom_css() -> str:
         align-items: center;
         display: flex;
         justify-content: center;
-        min-height: 110px;
+        min-height: 104px;
         overflow: visible;
-        padding: 0.25rem 1rem 0.25rem;
+        padding: 0.2rem 1rem 0.25rem;
         position: relative;
     }
 
@@ -467,29 +467,6 @@ def _custom_css() -> str:
         z-index: 2;
     }
 
-    .hero-copy::before {
-        background:
-            linear-gradient(90deg, transparent 0 3%, rgba(0, 53, 118, 0.16) 3% 3.45%, transparent 3.45% 6%),
-            linear-gradient(90deg, transparent 0 8%, rgba(0, 53, 118, 0.11) 8% 8.45%, transparent 8.45% 12%),
-            linear-gradient(90deg, transparent 0 15%, rgba(0, 53, 118, 0.2) 15% 15.45%, transparent 15.45% 20%),
-            linear-gradient(90deg, transparent 0 28%, rgba(0, 53, 118, 0.12) 28% 28.45%, transparent 28.45% 33%),
-            linear-gradient(90deg, transparent 0 41%, rgba(0, 53, 118, 0.17) 41% 41.45%, transparent 41.45% 48%),
-            linear-gradient(90deg, transparent 0 59%, rgba(0, 53, 118, 0.1) 59% 59.45%, transparent 59.45% 66%),
-            linear-gradient(90deg, transparent 0 74%, rgba(0, 53, 118, 0.18) 74% 74.45%, transparent 74.45% 80%),
-            linear-gradient(90deg, transparent 0 91%, rgba(0, 53, 118, 0.13) 91% 91.45%, transparent 91.45% 100%);
-        border-radius: 999px;
-        content: "";
-        height: 54px;
-        left: 50%;
-        opacity: 0.28;
-        pointer-events: none;
-        position: absolute;
-        top: 50%;
-        transform: translate(-50%, -42%);
-        width: min(860px, 78vw);
-        z-index: -1;
-    }
-
     .eyebrow {
         color: #003576;
         font-size: 0.75rem;
@@ -501,7 +478,7 @@ def _custom_css() -> str:
 
     .hero h1 {
         color: #111827;
-        font-size: clamp(2rem, 3.2vw, 3rem);
+        font-size: clamp(2rem, 3.1vw, 2.9rem);
         line-height: 1.05;
         margin: 0;
         max-width: 100%;
@@ -511,9 +488,9 @@ def _custom_css() -> str:
 
     .subtitle {
         color: #646b78;
-        font-size: 0.94rem;
+        font-size: 0.93rem;
         line-height: 1.4;
-        margin: 0.3rem auto 0;
+        margin: 0.28rem auto 0;
         max-width: 720px;
     }
 
@@ -541,8 +518,8 @@ def _custom_css() -> str:
         border: 1px solid rgba(214, 219, 226, 0.92) !important;
         border-radius: 8px !important;
         box-shadow: 0 20px 52px rgba(30, 41, 59, 0.1) !important;
-        margin-bottom: 0.7rem;
-        padding: 0.85rem !important;
+        margin-bottom: 0.6rem;
+        padding: 0.78rem !important;
     }
 
     .recognition-card,
@@ -570,7 +547,7 @@ def _custom_css() -> str:
         display: flex;
         gap: 1.5rem;
         justify-content: center;
-        margin-bottom: 0.45rem;
+        margin-bottom: 0.4rem;
         text-align: center;
     }
 
@@ -594,9 +571,9 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb !important;
         border-radius: 8px !important;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06) !important;
-        margin-top: 0.6rem;
+        margin-top: 0.5rem;
         overflow: hidden;
-        padding: 0.85rem 1rem !important;
+        padding: 0.78rem 0.95rem !important;
     }
 
     .input-panel,
@@ -618,7 +595,7 @@ def _custom_css() -> str:
         background: rgba(255, 255, 255, 0.82) !important;
         border: 1px solid #dde3eb !important;
         border-radius: 14px !important;
-        padding: 0.85rem !important;
+        padding: 0.8rem !important;
     }
 
     .input-column,
@@ -659,7 +636,7 @@ def _custom_css() -> str:
         border-radius: 14px !important;
         box-shadow: none !important;
         color: #111827 !important;
-        min-height: 185px !important;
+        min-height: 165px !important;
         resize: none !important;
     }
 
@@ -673,7 +650,7 @@ def _custom_css() -> str:
         pointer-events: none;
         position: absolute;
         text-align: center;
-        top: 40%;
+        top: 43%;
         transform: translate(-50%, -50%);
         white-space: pre;
         z-index: 4;
@@ -695,7 +672,7 @@ def _custom_css() -> str:
         border-color: #cbd5e1 !important;
         border-radius: 14px !important;
         color: #111827 !important;
-        min-height: 185px !important;
+        min-height: 165px !important;
     }
 
     .speech-audio .wrap,
@@ -708,7 +685,7 @@ def _custom_css() -> str:
         background-color: transparent !important;
         border-radius: 14px !important;
         color: #111827 !important;
-        min-height: 185px !important;
+        min-height: 165px !important;
     }
 
     .speech-audio,
@@ -759,7 +736,7 @@ def _custom_css() -> str:
         background-color: #000000 !important;
         border-color: #000000 !important;
         color: #ffffff !important;
-        margin-top: 0.55rem !important;
+        margin-top: 0.52rem !important;
     }
 
     .recognition-card .predict-button:hover,
@@ -862,7 +839,7 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb;
         border-radius: 8px;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
-        margin-top: 0.7rem;
+        margin-top: 0.6rem;
         overflow: hidden;
     }
 
@@ -873,8 +850,8 @@ def _custom_css() -> str:
         border-radius: 0;
         box-shadow: none;
         margin-top: 0;
-        min-height: 135px;
-        padding: 1rem 1.15rem;
+        min-height: 116px;
+        padding: 0.9rem 1.1rem;
     }
 
     .result-card .eyebrow {
@@ -897,7 +874,7 @@ def _custom_css() -> str:
     .result-row h2,
     .empty-result h2 {
         color: #22242a;
-        font-size: 2.25rem;
+        font-size: 2.15rem;
         line-height: 1;
         margin: 0;
     }
@@ -907,7 +884,7 @@ def _custom_css() -> str:
         border: 1px solid #dde3eb;
         border-radius: 8px;
         min-width: 160px;
-        padding: 0.65rem 0.8rem;
+        padding: 0.58rem 0.72rem;
         text-align: right;
     }
 
@@ -929,7 +906,7 @@ def _custom_css() -> str:
         background: rgba(248, 250, 252, 0.72);
         border-top: 1px solid #dde3eb;
         margin-top: 0;
-        padding: 0.75rem 1.15rem 0.8rem;
+        padding: 0.65rem 1.1rem 0.7rem;
     }
 
     .muted-text {
@@ -940,17 +917,17 @@ def _custom_css() -> str:
     }
 
     .score-row {
-        margin-top: 0.55rem;
+        margin-top: 0.45rem;
     }
 
     .score-label {
         align-items: center;
         color: #172033;
         display: flex;
-        font-size: 0.9rem;
+        font-size: 0.86rem;
         font-weight: 650;
         justify-content: space-between;
-        margin-bottom: 0.32rem;
+        margin-bottom: 0.26rem;
     }
 
     .score-label strong {
@@ -961,7 +938,7 @@ def _custom_css() -> str:
     .score-track {
         background: #e8edf4;
         border-radius: 999px;
-        height: 0.56rem;
+        height: 0.5rem;
         overflow: hidden;
     }
 
