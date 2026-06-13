@@ -20,7 +20,7 @@ from mer.inference import DemoEmotionPredictor
 
 DEFAULT_BASE_MODEL = "mistralai/Voxtral-Mini-3B-2507"
 DEFAULT_ADAPTER_PATH = "checkpoints/final_adapter_dora"
-POLITO_LOGO_PATH = Path(__file__).parent.parent.parent / "assets" / "polito_logo.png"
+POLITO_LOGO_PATH = Path(__file__).parent / "assets" / "polito_logo.png"
 GITHUB_URL = "https://github.com/ameermasood/MultimodalSpeechEmotionRecognition"
 EMOTION_COLORS = {
     "Angry": "#c2410c",
@@ -81,6 +81,7 @@ def build_app() -> gr.Blocks:
             processing_status = gr.HTML("")
             prediction_panel = gr.HTML(_prediction_panel_html(_empty_result_html(), _empty_scores_html()))
 
+        gr.HTML(_page_polito_mark_html())
         gr.HTML(_footer_html())
 
         predict_button.click(
@@ -246,13 +247,8 @@ def _env_bool(key: str, default: bool) -> bool:
 
 def _header_html() -> str:
     """Render the app header."""
-    logo = _polito_logo_data_uri()
-    logo_html = f'<img class="polito-logo" src="{logo}" alt="Politecnico di Torino logo">' if logo else ""
     return f"""
     <header class="hero">
-        <div class="hero-brand">
-            {logo_html}
-        </div>
         <div class="hero-copy">
             <h1>Multimodal Speech Emotion Recognition</h1>
             <p class="subtitle">
@@ -279,6 +275,18 @@ def _card_intro_html() -> str:
         <div>
             <h2>DEMO</h2>
         </div>
+    </div>
+    """
+
+
+def _page_polito_mark_html() -> str:
+    """Render a decorative PoliTo mark in the lower page whitespace."""
+    logo = _polito_logo_data_uri()
+    if not logo:
+        return ""
+    return f"""
+    <div class="page-polito-mark" aria-hidden="true">
+        <img src="{logo}" alt="">
     </div>
     """
 
@@ -427,6 +435,7 @@ def _custom_css() -> str:
         max-width: none !important;
         min-height: 100vh !important;
         padding: 8px 28px 86px !important;
+        position: relative !important;
         width: 100% !important;
     }
 
@@ -521,7 +530,10 @@ def _custom_css() -> str:
         border-radius: 8px !important;
         box-shadow: 0 20px 52px rgba(30, 41, 59, 0.1) !important;
         margin-bottom: 0.6rem;
+        overflow: hidden;
         padding: 0.78rem !important;
+        position: relative;
+        z-index: 60;
     }
 
     .recognition-card,
@@ -551,6 +563,17 @@ def _custom_css() -> str:
         justify-content: center;
         margin-bottom: 0.4rem;
         text-align: center;
+    }
+
+    .input-panel,
+    .prediction-panel {
+        position: relative;
+        z-index: 1;
+    }
+
+    .card-intro h2 {
+        position: relative;
+        z-index: 1;
     }
 
     .card-intro h2 {
@@ -968,6 +991,22 @@ def _custom_css() -> str:
         height: 100%;
     }
 
+    .page-polito-mark {
+        bottom: -150px;
+        pointer-events: none;
+        position: fixed;
+        right: -130px;
+        z-index: 55;
+    }
+
+    .page-polito-mark img {
+        display: block;
+        height: auto;
+        opacity: 0.10;
+        transform: rotate(-45deg);
+        width: 450px;
+    }
+
     .project-footer {
         align-items: center;
         background: rgba(255, 255, 255, 0.94);
@@ -992,7 +1031,7 @@ def _custom_css() -> str:
     .footer-main {
         color: #111827;
         font-weight: 500;
-        opacity: 0.30;
+        opacity: 1;
     }
 
     .footer-main strong {
