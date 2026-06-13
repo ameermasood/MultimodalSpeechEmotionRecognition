@@ -302,7 +302,9 @@ def _empty_result_html() -> str:
     return """
     <div class="result-card empty-result">
         <p class="eyebrow">Prediction</p>
-        <h2>Pending</h2>
+        <div class="prediction-placeholder">
+            Run Prediction to View Results
+        </div>
     </div>
     """
 
@@ -859,9 +861,28 @@ def _custom_css() -> str:
     }
 
     .empty-result {
-        align-content: center;
+        align-items: center;
         background: transparent;
         border-left-color: #94a3b8;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        text-align: center;
+    }
+
+    .empty-result .eyebrow {
+        left: 1.1rem;
+        position: absolute;
+        top: 0.9rem;
+    }
+
+    .prediction-placeholder {
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 750;
+        line-height: 1.45;
+        text-align: center;
     }
 
     .result-row {
