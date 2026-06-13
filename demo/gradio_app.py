@@ -432,6 +432,7 @@ def _custom_css() -> str:
         --polito-navy: #003576;
         display: flex !important;
         flex-direction: column !important;
+        font-family: Avenir, "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
         margin: 0 !important;
         max-width: none !important;
         min-height: 100vh !important;
@@ -996,7 +997,7 @@ def _custom_css() -> str:
         left: 50%;
         pointer-events: none;
         position: fixed;
-        top: 91.5%;
+        top: 21.5%;
         transform: translate(-50%, -50%);
         z-index: 55;
     }
