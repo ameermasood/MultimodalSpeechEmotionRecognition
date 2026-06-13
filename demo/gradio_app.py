@@ -55,18 +55,18 @@ def build_app() -> gr.Blocks:
             with gr.Group(elem_classes="input-panel"):
                 with gr.Row(elem_classes="input-grid"):
                     with gr.Column(scale=1, min_width=320, elem_classes=["input-column", "audio-column"]):
-                        gr.HTML('<p class="field-label">Upload speech audio</p>')
+                        gr.HTML('<p class="field-label">Audio (Required)</p>')
                         audio = gr.Audio(
-                            label="Upload speech audio",
+                            label="Audio (Required)",
                             show_label=False,
                             type="filepath",
                             sources=["upload"],
                             elem_classes="speech-audio",
                         )
                     with gr.Column(scale=1, min_width=320, elem_classes=["input-column", "transcript-column"]):
-                        gr.HTML('<p class="field-label">Optional transcript</p>')
+                        gr.HTML('<p class="field-label">Transcript (Optional)</p>')
                         transcript = gr.Textbox(
-                            label="Optional transcript",
+                            label="Transcript (Optional)",
                             show_label=False,
                             placeholder=" ",
                             lines=5,
@@ -501,7 +501,7 @@ def _custom_css() -> str:
     }
 
     .subtitle {
-        color: #646b78;
+        color: var(--polito-navy);
         font-size: 0.93rem;
         line-height: 1.4;
         margin: 0.28rem auto 0;
@@ -678,7 +678,7 @@ def _custom_css() -> str:
         pointer-events: none;
         position: absolute;
         text-align: center;
-        top: 43%;
+        top: 38%;
         transform: translate(-50%, -50%);
         white-space: pre;
         z-index: 4;
