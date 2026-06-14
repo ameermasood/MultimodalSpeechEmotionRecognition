@@ -114,7 +114,7 @@ def _predict(
             _prediction_panel_html(
                 _message_result_html(
                     title="Upload audio first",
-                    message="Add an audio file or record a short speech sample, then run prediction.",
+                    message="Add an audio file, then run prediction.",
                 ),
                 _empty_scores_html(),
             ),
@@ -252,7 +252,7 @@ def _header_html() -> str:
         <div class="hero-copy">
             <h1>Multimodal Speech Emotion Recognition</h1>
             <p class="subtitle">
-                Upload or Record Speech, Add a Transcript If Available, and Predict the Speaker’s Emotion
+                Upload Speech Audio, Add a Transcript If Available, and Predict the Speaker’s Emotion
             </p>
         </div>
     </header>

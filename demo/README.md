@@ -15,7 +15,7 @@ Multimodal Speech Emotion Recognition
 
 It supports:
 
-- Uploading or recording a speech sample
+- Uploading a speech sample
 - Optional transcript input for audio-plus-text inference
 - Prediction over the four labels: `Angry`, `Happy`, `Sad`, `Neutral`
 - A dynamic prediction panel with label confidence
@@ -92,7 +92,7 @@ changes:
 PYTHONPATH=src gradio demo/gradio_app.py
 ```
 
-Then upload or record an audio file and optionally paste a transcript.
+Then upload an audio file and optionally paste a transcript.
 
 The displayed label confidence is computed by scoring each allowed emotion label
 (`Angry`, `Happy`, `Sad`, `Neutral`) as a candidate continuation and normalizing

@@ -149,7 +149,7 @@ Multimodal Speech Emotion Recognition
 
 The demo provides a simple inference interface for the fine-tuned model:
 
-- Upload or record a speech audio sample.
+- Upload a speech audio sample.
 - Optionally provide the transcript text.
 - Predict one of `Angry`, `Happy`, `Sad`, or `Neutral`.
 - Display label confidence and the normalized label distribution.
@@ -160,7 +160,7 @@ Watch the demo walkthrough:
 https://youtu.be/g67SMLFglYQ
 ```
 
-![Demo prediction](demo/assets/demo_initial.png)
+![Initial demo state](demo/assets/demo_initial.png)
 
 ![Demo prediction](demo/assets/demo_prediction.png)
 
