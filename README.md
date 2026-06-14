@@ -17,6 +17,8 @@ The project follows a staged speech emotion recognition pipeline:
 6. Compare audio-only and audio-plus-transcript inference.
 7. Report metrics, confusion patterns, and results.
 
+![Pipeline architecture](assets/pipeline_architecture.png)
+
 The model outputs one label from the four-class emotion set:
 
 ```text
@@ -142,7 +144,7 @@ The intended chained flow is:
 The repository includes a local Gradio demo titled:
 
 ```text
-Speech Emotion Recognition System
+Multimodal Speech Emotion Recognition
 ```
 
 The demo provides a simple inference interface for the fine-tuned model:
@@ -152,16 +154,21 @@ The demo provides a simple inference interface for the fine-tuned model:
 - Predict one of `Angry`, `Happy`, `Sad`, or `Neutral`.
 - Display label confidence and the normalized label distribution.
 
+Watch the demo walkthrough:
+
+```text
+https://youtu.be/g67SMLFglYQ
+```
+
+![Demo prediction](demo/assets/demo_initial.png)
+
+![Demo prediction](demo/assets/demo_prediction.png)
+
+
 Run it from the repository root:
 
 ```bash
 python3 demo/gradio_app.py
-```
-
-For UI development with automatic reload, use Gradio's CLI:
-
-```bash
-PYTHONPATH=src gradio demo/gradio_app.py
 ```
 
 The demo expects a Voxtral base model, loaded by default from Hugging Face, and

@@ -21,9 +21,21 @@ It supports:
 - A dynamic prediction panel with label confidence
 - A label distribution section inside the prediction panel
 
-In this project, multimodal means multimodal input: speech audio can be used
-alone, or combined with optional transcript text. The output is a classification
-result, not a multimodal generated output.
+## Walkthrough
+
+Watch the demo walkthrough:
+
+```text
+https://youtu.be/g67SMLFglYQ
+```
+
+Initial state:
+
+![Initial demo state](assets/demo_initial.png)
+
+Prediction state:
+
+![Demo prediction state](assets/demo_prediction.png)
 
 ## Required Artifacts
 
@@ -93,7 +105,3 @@ estimate.
 Voxtral-Mini-3B is large. A practical local run usually needs a compatible GPU,
 enough memory, and the correct PyTorch/Transformers/PEFT stack. The first run may
 download the base model into the Hugging Face cache.
-
-Runtime settings are read from environment variables when needed, including
-`BASE_MODEL_ID`, `ADAPTER_PATH`, `DEVICE`, `MAX_NEW_TOKENS`, and
-`LOAD_IN_4BIT`.
